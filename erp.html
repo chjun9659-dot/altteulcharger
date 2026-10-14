@@ -1,0 +1,2973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>알뜰차저 관리 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0F6E56;--teal-light:#E1F5EE;--teal-dark:#085041;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --blue:#185FA5;--blue-light:#E6F1FB;
+  --gray:#5F5E5A;--gray-light:#F1EFE8;
+  --border:#e5e5e2;--bg:#fafaf8;--white:#fff;
+  --text:#1a1a18;--muted:#6b6b67;
+  --radius:8px;--radius-lg:12px;
+  --sidebar:220px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;font-size:15px;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topnav{background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 100%);padding:0 20px;display:flex;align-items:center;height:56px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;width:var(--sidebar)}
+.brand-icon{width:32px;height:32px;background:rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.brand-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sync-btn{padding:7px 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:var(--radius);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.sync-btn:hover{background:rgba(255,255,255,.25)}
+.sync-status{font-size:12px;color:rgba(255,255,255,.75)}
+.settings-btn{padding:7px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);font-size:13px;cursor:pointer}
+.settings-btn:hover{background:rgba(255,255,255,.2)}
+.app-body{flex:1;overflow:hidden;display:flex}
+.sidebar{width:var(--sidebar);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;box-shadow:1px 0 4px rgba(0,0,0,.04)}
+.sidebar-menu{padding:10px 0}
+.nav-tab{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:13.5px;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .15s;white-space:nowrap;margin:1px 8px;border-radius:8px;border-left:none}
+.nav-tab:hover{background:var(--bg);color:var(--text)}
+.nav-tab.active{background:var(--teal-light);color:var(--teal);font-weight:600}
+.nav-tab.active .tab-icon{filter:none}
+.tab-icon{font-size:16px;width:20px;text-align:center}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+.page-content{flex:1;overflow-y:auto;padding:20px 24px 32px}
+.toolbar{padding:10px 20px;border-bottom:1px solid var(--border);background:var(--white);display:flex;align-items:center;gap:8px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+/* 단지 관리 상태 탭 (진행중/완료 분리) */
+.cx-tabs{display:flex;gap:2px;padding:8px 20px 0;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.cx-tab{padding:9px 16px;border:none;background:none;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;margin-bottom:-1px}
+.cx-tab:hover{color:var(--text)}
+.cx-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.cx-tab .cnt{display:inline-block;font-size:11px;font-weight:600;background:var(--gray-light);color:var(--muted);border-radius:10px;padding:1px 7px;margin-left:4px}
+.cx-tab.active .cnt{background:var(--teal-light);color:var(--teal)}
+
+/* ===== 월별 일정 달력 ===== */
+.cal-toolbar{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.cal-nav-btn{width:32px;height:32px;border:1px solid var(--border);background:var(--white);border-radius:var(--radius);cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cal-nav-btn:hover{background:var(--teal-light);border-color:var(--teal);color:var(--teal)}
+.cal-title{font-size:17px;font-weight:700;min-width:120px;text-align:center}
+.cal-today-btn{padding:6px 14px;border:1px solid var(--border);background:var(--white);border-radius:var(--radius);cursor:pointer;font-size:12.5px;font-family:inherit;color:var(--text)}
+.cal-today-btn:hover{background:var(--bg)}
+.cal-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-dow{padding:10px 0;text-align:center;font-size:13px;font-weight:600;background:var(--bg);border-bottom:1px solid var(--border);color:var(--text)}
+.cal-dow.sun{color:var(--red)} .cal-dow.sat{color:var(--blue)}
+.cal-cell{min-height:110px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px;cursor:pointer;transition:background .12s;position:relative;overflow:hidden}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell:hover{background:var(--bg)}
+.cal-cell.other{background:#fcfcfb} .cal-cell.other .cal-day{color:#c9c9c5}
+.cal-day{font-size:14px;font-weight:600;margin-bottom:6px}
+.cal-cell.sun .cal-day{color:var(--red)} .cal-cell.sat .cal-day{color:var(--blue)}
+.cal-cell.today{background:var(--teal-light)}
+.cal-cell.today .cal-day{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--teal);color:#fff;border-radius:50%}
+.cal-ev{display:block;background:var(--blue-light);border:1px solid #d3e5f6;border-radius:6px;padding:4px 7px;font-size:11.5px;line-height:1.45;margin-bottom:4px;cursor:pointer;word-break:break-all;transition:all .12s}
+.cal-ev:hover{border-color:var(--blue);box-shadow:var(--shadow-sm)}
+.cal-ev .ev-who{color:var(--red);font-weight:600}
+.cal-ev .ev-text{color:var(--text)}
+@media(max-width:900px){.cal-cell{min-height:80px;padding:5px}.cal-ev{font-size:10.5px;padding:3px 5px}}
+
+.search-wrap{flex:1;position:relative;max-width:320px}
+.search-wrap input{width:100%;padding:7px 10px 7px 32px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);outline:none}
+.search-wrap input:focus{border-color:var(--teal)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+select.filter{padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--white);color:var(--text);cursor:pointer;outline:none}
+select.filter:focus{border-color:var(--teal)}
+.btn{padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:13px;color:var(--text);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:var(--gray-light)}
+.btn-primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 1px 3px rgba(15,110,86,.25)}
+.btn-primary:hover{background:var(--teal-dark);box-shadow:0 2px 6px rgba(15,110,86,.3)}
+.btn-danger{background:#fff;color:var(--red);border-color:#e8b4b4}
+.btn-danger:hover{background:var(--red-light)}
+.ml-auto{margin-left:auto}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 20px 16px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s}
+.stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border)}
+.stat-card.card-teal::before{background:var(--teal)}
+.stat-card.card-amber::before{background:var(--amber)}
+.stat-card.card-red::before{background:#C0392B}
+.stat-card.card-blue::before{background:var(--blue)}
+.stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px}
+.stat-icon.bg-teal{background:var(--teal-light)}
+.stat-icon.bg-amber{background:var(--amber-light)}
+.stat-icon.bg-red{background:var(--red-light)}
+.stat-icon.bg-blue{background:var(--blue-light)}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-val{font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.stat-val.green{color:var(--teal)}
+.stat-val.amber{color:var(--amber)}
+.stat-val.red{color:#C0392B}
+.dash-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.dash-section-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.dash-section-link{font-size:12px;color:var(--teal);cursor:pointer;font-weight:500}
+.dash-section-link:hover{text-decoration:underline}
+.dash-page-header{padding:18px 24px 16px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--white);margin-bottom:0}
+.dash-page-header h2{font-size:16px;font-weight:600;color:var(--text)}
+.dash-page-header p{font-size:12px;color:var(--muted);margin-top:2px}
+.stat-card.card-blue::before{background:var(--blue)}
+.stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
+.stat-icon.bg-teal{background:var(--teal-light)}
+.stat-icon.bg-amber{background:var(--amber-light)}
+.stat-icon.bg-red{background:var(--red-light)}
+.stat-icon.bg-blue{background:var(--blue-light)}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-val{font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.stat-val.green{color:var(--teal)}
+.stat-val.amber{color:var(--amber)}
+.stat-val.red{color:#C0392B}
+/* 대시보드 섹션 타이틀 */
+.dash-section{margin-bottom:20px}
+.dash-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.dash-section-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.dash-section-title .title-bar{width:3px;height:14px;background:var(--teal);border-radius:2px;display:inline-block}
+.dash-section-link{font-size:12px;color:var(--teal);cursor:pointer;font-weight:500;display:flex;align-items:center;gap:2px}
+.dash-section-link:hover{text-decoration:underline}
+/* 대시보드 상단 */
+.dash-page-header{padding:20px 24px 4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--white)}
+.dash-page-header h2{font-size:16px;font-weight:600;color:var(--text)}
+.dash-page-header p{font-size:12px;color:var(--muted);margin-top:2px}
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 16px;text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f7f7f5;cursor:pointer}
+tbody td{transition:background .1s}
+tbody tr.expanded td{background:#f7f7f5}
+.detail-row td{padding:0!important;background:var(--bg)!important;cursor:default!important}
+.detail-row td:hover{background:var(--bg)!important}
+.detail-inner{padding:20px 28px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
+.detail-grid{display:grid;grid-template-columns:200px 1fr 1fr;gap:24px;align-items:start}
+.detail-section{font-size:13px}
+.detail-title{color:var(--muted);margin-bottom:10px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+.detail-title::before{content:'';display:inline-block;width:3px;height:12px;background:var(--teal);border-radius:2px}
+.serial-tags{display:flex;flex-wrap:wrap;gap:5px}
+.serial-tag{background:var(--white);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:12px;font-family:'SF Mono',Monaco,monospace;color:var(--gray)}
+.detail-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.detail-info-item{display:flex;flex-direction:column;gap:2px;padding:6px 10px;background:var(--white);border-radius:6px;border:1px solid var(--border)}
+.detail-info-item .key{color:var(--muted);font-size:11px;font-weight:500}
+.detail-info-item .val{color:var(--text);font-size:13px;font-weight:400}
+.detail-actions{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none;padding-bottom:0}
+.tl-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.tl-dot-blue{background:var(--blue)}
+.tl-dot-amber{background:#EF9F27}
+.tl-dot-green{background:var(--teal)}
+.tl-dot-gray{background:#B4B2A9}
+.tl-dot-red{background:#E24B4A}
+.tl-head{font-size:13px;font-weight:500;margin-bottom:2px}
+.tl-meta{font-size:12px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:500}
+.badge-green{background:var(--teal-light);color:#085041}
+.badge-amber{background:var(--amber-light);color:#633806}
+.badge-red{background:var(--red-light);color:#791F1F}
+.badge-blue{background:var(--blue-light);color:#0C447C}
+.badge-gray{background:var(--gray-light);color:#444441}
+.badge-purple{background:#EEEAFB;color:#3C2A82}
+/* 페이지네이션 */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0 4px;flex-wrap:wrap}
+.pagination:empty{display:none}
+.page-btn{min-width:34px;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s}
+.page-btn:hover:not(:disabled):not(.active){border-color:var(--teal);color:var(--teal)}
+.page-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.page-btn:disabled{opacity:.35;cursor:default}
+.page-info{font-size:12px;color:var(--muted);margin-left:10px}
+.badge-purple{background:#F0EAFB;color:#5B2D8E}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:12px;color:var(--muted);font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text);background:var(--white);outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:560px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:500}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1;padding:4px}
+.modal-body{padding:20px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 16px;border-radius:var(--radius);font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mono{font-family:'SF Mono',Monaco,monospace;font-size:12px}
+/* 설정 */
+.setup-card{max-width:480px;margin:40px auto;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.setup-head{padding:20px;border-bottom:1px solid var(--border);text-align:center}
+.setup-head h2{font-size:18px;font-weight:500;margin-bottom:4px}
+.setup-head p{font-size:13px;color:var(--muted)}
+.setup-body{padding:20px}
+.step{display:flex;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.step:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-content h4{font-size:13px;font-weight:500;margin-bottom:4px}
+.step-content p{font-size:12px;color:var(--muted);line-height:1.6}
+.url-input-wrap{margin-top:8px;display:flex;gap:6px}
+.url-input-wrap input{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;outline:none;font-family:monospace}
+.url-input-wrap input:focus{border-color:var(--teal)}
+/* i-Sensor 배지 */
+.isensor-own{background:#E8F5E9;color:#1B5E20;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
+.isensor-other{background:#FFF3E0;color:#E65100;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
+/* 아이센서 입출고 구분 배지 */
+.isv-in{background:#E3F2FD;color:#1565C0;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
+.isv-out{background:#FFF3E0;color:#E65100;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
+/* 확인 다이얼로그 */
+.confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center}
+.confirm-bg.open{display:flex}
+.confirm-box{background:var(--white);border-radius:var(--radius-lg);padding:24px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.confirm-box h3{font-size:15px;font-weight:500;margin-bottom:8px}
+.confirm-box p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="brand" href="#"><div class="brand-icon">⚡</div><span class="brand-name">알뜰차저 ERP</span></a>
+  <div class="nav-right">
+    <span class="sync-status" id="sync-status">–</span>
+    <button class="sync-btn" onclick="syncAll()">↻ 동기화</button>
+    <button class="settings-btn" onclick="showPage('setup')">⚙ 설정</button>
+  </div>
+</nav>
+
+<div class="app-body">
+  <div class="sidebar">
+    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">알뜰에너지솔루션</div>
+      <div style="font-size:12px;color:var(--muted)">관리자 모드</div>
+    </div>
+    <div class="sidebar-menu">
+      <div class="nav-tab active" onclick="showPage('dashboard')"><span class="tab-icon">📊</span> 대시보드</div>
+      <div class="nav-tab" onclick="showPage('complexes')"><span class="tab-icon">🏢</span> 단지 관리</div>
+      <div class="nav-tab" onclick="showPage('chargers')"><span class="tab-icon">🔌</span> 충전기 현황</div>
+      <div class="nav-tab" onclick="showPage('as')"><span class="tab-icon">🔧</span> A/S 관리</div>
+      <div class="nav-tab" onclick="showPage('contracts')"><span class="tab-icon">📋</span> 계약/매출</div>
+      <div class="nav-tab" onclick="showPage('rent')"><span class="tab-icon">💸</span> 임대료 정산</div>
+      <div class="nav-tab" onclick="showPage('schedule')"><span class="tab-icon">📅</span> 일정 관리</div>
+    </div>
+    <div style="margin-top:auto;padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">
+      알뜰차저 ERP v6
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- 설정 -->
+    <div class="page active" id="page-setup">
+      <div class="page-content">
+        <div class="setup-card">
+          <div class="setup-head"><h2>초기 설정</h2><p>구글 스프레드시트와 연결하면 시작됩니다</p></div>
+          <div class="setup-body">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content"><h4>구글 스프레드시트 만들기</h4><p>새 구글 스프레드시트를 만들고, 아래 Apps Script 코드를 붙여넣으세요.<br><strong>확장 → Apps Script → 코드 붙여넣기 → 배포</strong></p></div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content"><h4>Apps Script 배포 URL 붙여넣기</h4><p>배포 완료 후 받은 <strong>웹 앱 URL</strong>을 아래에 입력하세요.</p>
+                <div class="url-input-wrap"><input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec"/><button class="btn btn-primary" onclick="saveGasUrl()">저장</button></div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content"><h4>Apps Script 코드</h4><p>아래 버튼을 눌러 코드를 복사하세요.</p>
+                <button class="btn" style="margin-top:6px" onclick="copyGasCode()">📋 Apps Script 코드 복사</button>
+              </div>
+            </div>
+            <div style="margin-top:16px;text-align:center">
+              <button class="btn btn-primary" onclick="testConnection()" style="padding:10px 24px">연결 테스트 및 시작하기</button>
+              <div id="test-result" style="margin-top:12px;font-size:12px;color:var(--muted);display:none"></div>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn" onclick="clearCache()" style="font-size:12px;color:var(--red)">🗑 로컬 캐시 초기화 (문제 해결용)</button>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대시보드 -->
+    <div class="page" id="page-dashboard">
+      <div class="dash-page-header">
+        <h2>대시보드</h2>
+        <p id="dash-date-str"></p>
+      </div>
+      <div class="page-content">
+        <div class="stats-row">
+          <div class="stat-card card-teal">
+            <div class="stat-icon bg-teal">🏢</div>
+            <div class="stat-label">총 설치 단지</div>
+            <div class="stat-val green" id="s-complexes">–</div>
+            <div class="stat-sub" id="s-complexes-sub">운영 단지 기준</div>
+          </div>
+          <div class="stat-card card-blue">
+            <div class="stat-icon bg-blue">🔌</div>
+            <div class="stat-label">총 설치 충전기</div>
+            <div class="stat-val" id="s-chargers">–</div>
+            <div class="stat-sub" id="s-chargers-sub">시리얼 등록 기준</div>
+            <div style="margin-top:6px;font-size:12px;color:var(--blue)" id="s-chargers-count"></div>
+          </div>
+          <div class="stat-card card-amber">
+            <div class="stat-icon bg-amber">🔧</div>
+            <div class="stat-label">A/S 처리중</div>
+            <div class="stat-val amber" id="s-as-open">–</div>
+            <div class="stat-sub" id="s-as-sub">미처리 포함</div>
+          </div>
+          <div class="stat-card card-teal">
+            <div class="stat-icon bg-teal">🛡</div>
+            <div class="stat-label">i-Sensor 설치율</div>
+            <div class="stat-val green" id="s-isensor">–</div>
+            <div class="stat-sub" id="s-isensor-sub">i-Sensor 설치 비율</div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span style="width:3px;height:14px;background:var(--teal);border-radius:2px;display:inline-block"></span>최근 A/S 접수</span>
+            <span class="dash-section-link" onclick="showPage('as')">전체보기 →</span>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>접수일</th><th>단지명</th><th>시리얼 번호</th><th>증상</th><th>상태</th></tr></thead>
+            <tbody id="dash-as-list"><tr><td colspan="5" class="loading"><div class="spinner"></div><br>데이터 로딩중...</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span style="width:3px;height:14px;background:var(--teal);border-radius:2px;display:inline-block"></span>최근 설치 단지</span>
+            <span class="dash-section-link" onclick="showPage('complexes')">전체보기 →</span>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>단지명</th><th>지역</th><th>계약일</th><th>시공일</th><th>설치대수</th><th>i-Sensor</th><th>영업담당자</th></tr></thead>
+            <tbody id="dash-complex-list"><tr><td colspan="6" class="loading"><div class="spinner"></div><br>데이터 로딩중...</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 단지 관리 -->
+    <div class="page" id="page-complexes">
+      <!-- 상태 탭: 진행중(계약중) / 완료(계약완료·설치완료·운영중) -->
+      <div class="cx-tabs">
+        <button class="cx-tab" data-tab="all" onclick="cxSetTab('all')">전체 <span class="cnt" id="cx-cnt-all">0</span></button>
+        <button class="cx-tab active" data-tab="progress" onclick="cxSetTab('progress')">🔥 진행중 <span class="cnt" id="cx-cnt-progress">0</span></button>
+        <button class="cx-tab" data-tab="done" onclick="cxSetTab('done')">✅ 완료 <span class="cnt" id="cx-cnt-done">0</span></button>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" placeholder="단지명, 비고 검색..." oninput="cxSetFilter('search', this.value)"></div>
+        <select class="filter" id="cx-status-filter" onchange="cxSetFilter('status', this.value)">
+          <option value="">전체 상태</option><option>계약중</option><option>계약완료</option><option>설치완료</option><option>운영중</option>
+        </select>
+        <select class="filter" onchange="cxSetFilter('isensor', this.value)">
+          <option value="">i-Sensor 전체</option><option value="설치">✅ 설치</option><option value="미설치">❌ 미설치</option>
+        </select>
+        <select class="filter" onchange="cxSetFilter('biz', this.value)">
+          <option value="">사업유형 전체</option><option value="운영">🔄 운영(임대료 지급)</option><option value="운영(비배분)">⚙️ 운영</option><option value="운영대행">🛠️ 운영대행</option><option value="판매">💰 판매</option>
+        </select>
+        <button class="btn btn-primary ml-auto" onclick="openModal('modal-complex')">+ 단지 등록</button>
+      </div>
+      <div class="page-content">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:40px;text-align:center">NO</th><th>단지명</th><th>지역</th><th>계약일</th><th>시공일</th><th>시공업체</th><th>설치대수</th><th>A/S건수</th><th>영업담당자</th><th>i-Sensor</th><th>사업유형</th><th>상태</th></tr></thead>
+            <tbody id="complex-table"><tr><td colspan="12" class="loading"><div class="spinner"></div><br>동기화 후 표시됩니다</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="cx-pagination"></div>
+      </div>
+    </div>
+
+    <!-- 충전기 현황 -->
+    <div class="page" id="page-chargers">
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" placeholder="시리얼·QR번호, 단지명, 거점 검색..." oninput="chSetFilter('search', this.value)"></div>
+        <select class="filter" onchange="chSetFilter('status', this.value)">
+          <option value="">전체 상태</option><option>정상</option><option>점검중</option><option>수리중</option>
+        </select>
+        <button class="btn" onclick="chToggleAll()" id="ch-toggle-all-btn">⊞ 모두 펼치기</button>
+        <button class="btn ml-auto" onclick="exportChargersCSV()">↓ CSV 내보내기</button>
+        <button class="btn" onclick="openChargerBulk()">📋 거점 일괄 등록</button>
+        <button class="btn btn-primary" onclick="openChargerAdd()">+ 충전기 등록</button>
+      </div>
+      <div class="page-content">
+        <!-- 재고 요약: 잔여 재고 = 총 입고 수량 − 설치 등록(시리얼 등록) 수 -->
+        <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+          <div class="stat-card"><div class="stat-label">총 입고 수량</div><div class="stat-val" id="inv-total">–</div><div class="stat-sub" id="inv-total-sub">입고 0건</div></div>
+          <div class="stat-card"><div class="stat-label">설치 등록</div><div class="stat-val" id="inv-installed">–</div><div class="stat-sub">시리얼 등록 기준</div></div>
+          <div class="stat-card card-teal"><div class="stat-label">잔여 재고</div><div class="stat-val green" id="inv-stock">–</div><div class="stat-sub">입고 − 설치 등록</div></div>
+        </div>
+        <!-- 입고 내역 (접기/펼치기) -->
+        <div class="dash-section" style="margin-bottom:16px">
+          <div class="dash-section-head">
+            <span class="dash-section-title" onclick="invToggle()" style="cursor:pointer;user-select:none"><span class="title-bar"></span><span id="inv-arrow" style="display:inline-block;width:14px">▸</span>📦 입고 내역 <span id="inv-count" style="font-weight:400;color:var(--muted)"></span></span>
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="openModal('modal-inbound')">+ 입고 등록</button>
+          </div>
+          <div class="table-wrap" id="inv-table-wrap" style="display:none">
+            <table>
+              <thead><tr><th>입고일</th><th>수량</th><th>모델명</th><th>공급처</th><th>비고</th><th style="width:60px"></th></tr></thead>
+              <tbody id="inbound-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 아이센서 재고 요약: 잔여 재고 = 총 입고 수량 − 총 출고(설치) 수량 -->
+        <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+          <div class="stat-card"><div class="stat-label">아이센서 총 입고</div><div class="stat-val" id="isv-in">–</div><div class="stat-sub" id="isv-in-sub">입고 0건</div></div>
+          <div class="stat-card"><div class="stat-label">아이센서 총 출고(설치)</div><div class="stat-val" id="isv-out">–</div><div class="stat-sub" id="isv-out-sub">출고 0건</div></div>
+          <div class="stat-card card-teal"><div class="stat-label">아이센서 잔여 재고</div><div class="stat-val green" id="isv-stock">–</div><div class="stat-sub">입고 − 출고</div></div>
+        </div>
+        <!-- 아이센서 입출고 내역 (접기/펼치기) -->
+        <div class="dash-section" style="margin-bottom:16px">
+          <div class="dash-section-head">
+            <span class="dash-section-title" onclick="isvToggle()" style="cursor:pointer;user-select:none"><span class="title-bar"></span><span id="isv-arrow" style="display:inline-block;width:14px">▸</span>📡 아이센서 입출고 내역 <span id="isv-count" style="font-weight:400;color:var(--muted)"></span></span>
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="openModal('modal-isensor')">+ 입출고 등록</button>
+          </div>
+          <div class="table-wrap" id="isv-table-wrap" style="display:none">
+            <table>
+              <thead><tr><th>구분</th><th>일자</th><th>수량</th><th>단지명</th><th>모델명/공급처</th><th>비고</th><th style="width:60px"></th></tr></thead>
+              <tbody id="isensor-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>거점</th><th>충전기</th><th>시리얼 번호</th><th>QR충전기번호</th><th>상세위치</th><th>설치일</th><th>최근 A/S</th><th>상태</th></tr></thead>
+            <tbody id="charger-table"><tr><td colspan="8" class="loading"><div class="spinner"></div><br>동기화 후 표시됩니다</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- A/S 관리 -->
+    <div class="page" id="page-as">
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" placeholder="단지명, 시리얼번호, 증상 검색..." oninput="filterTable('as-table', this.value)"></div>
+        <select class="filter" onchange="filterByStatus('as-table', this.value, 6)">
+          <option value="">전체 상태</option><option>미처리</option><option>처리중</option><option>완료</option>
+        </select>
+        <button class="btn btn-primary ml-auto" onclick="openModal('modal-as')">+ A/S 접수</button>
+      </div>
+      <div class="page-content">
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+          <div class="stat-card"><div class="stat-label">전체</div><div class="stat-val" id="as-total">–</div></div>
+          <div class="stat-card"><div class="stat-label">미처리</div><div class="stat-val red" id="as-new">–</div></div>
+          <div class="stat-card"><div class="stat-label">처리중</div><div class="stat-val amber" id="as-wip">–</div></div>
+          <div class="stat-card"><div class="stat-label">완료</div><div class="stat-val green" id="as-done">–</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>접수번호</th><th>접수일</th><th>단지명</th><th>시리얼 번호</th><th>증상</th><th>담당자</th><th>상태</th></tr></thead>
+            <tbody id="as-table"><tr><td colspan="7" class="loading"><div class="spinner"></div><br>동기화 후 표시됩니다</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약/매출 -->
+    <div class="page" id="page-contracts">
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" placeholder="단지명 검색..." oninput="filterSales(this.value)"></div>
+        <select class="filter" id="sales-year-filter" onchange="renderContracts()">
+        </select>
+        <select class="filter" id="sales-month-filter" onchange="renderContracts()">
+        </select>
+        <button class="btn ml-auto" onclick="exportSalesCSV()">↓ CSV 내보내기</button>
+        <button class="btn btn-primary" onclick="openModal('modal-sales')">+ 매출 입력</button>
+      </div>
+      <div class="page-content">
+        <!-- 요약 카드 -->
+        <div class="stats-row" style="margin-bottom:20px">
+          <div class="stat-card card-teal">
+            <div class="stat-icon bg-teal">💰</div>
+            <div class="stat-label">이달 총매출</div>
+            <div class="stat-val green" id="c-monthly">–</div>
+            <div class="stat-sub">원</div>
+          </div>
+          <div class="stat-card card-blue">
+            <div class="stat-icon bg-blue">📈</div>
+            <div class="stat-label">올해 누적</div>
+            <div class="stat-val" id="c-yearly">–</div>
+            <div class="stat-sub">원</div>
+          </div>
+          <div class="stat-card card-amber">
+            <div class="stat-icon bg-amber">🏢</div>
+            <div class="stat-label">입력된 단지 수</div>
+            <div class="stat-val amber" id="c-total">–</div>
+            <div class="stat-sub">이달 기준</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon bg-teal">⚡</div>
+            <div class="stat-label">단지별 월평균</div>
+            <div class="stat-val" id="c-avg">–</div>
+            <div class="stat-sub">원</div>
+          </div>
+        </div>
+
+        <!-- 단지별 매출 테이블 -->
+        <div class="dash-section">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span class="title-bar"></span>단지별 매출 현황</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>단지명</th><th>연월</th><th>매출액(원)</th><th>충전량(kWh)</th><th>비고</th><th>등록일</th><th></th></tr></thead>
+              <tbody id="sales-table"><tr><td colspan="7" class="loading"><div class="spinner"></div><br>동기화 후 표시됩니다</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 단지별 누적 요약 -->
+        <div class="dash-section" style="margin-top:20px">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span class="title-bar"></span>단지별 누적 실적</span>
+          </div>
+          <div id="sales-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px"></div>
+        </div>
+      </div>
+    </div>
+
+  
+    <!-- 임대료 정산 -->
+    <div class="page" id="page-rent">
+      <div class="toolbar" style="flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--muted)">정산기간</span>
+        <input type="month" id="rent-start" class="filter" onchange="renderRent()">
+        <span style="color:var(--muted)">~</span>
+        <input type="month" id="rent-end" class="filter" onchange="renderRent()">
+        <button class="btn" onclick="rentQuick('month')">지난달</button>
+        <button class="btn" onclick="rentQuick('quarter')">지난 분기</button>
+        <label style="font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="rent-show-all" onchange="renderRent()"> 전체 단지 보기</label>
+        <button class="btn ml-auto" onclick="openRentSender()">👤 발신 담당자</button>
+        <button class="btn btn-primary" onclick="openRentCond()">+ 임대료 조건 등록</button>
+      </div>
+      <div class="page-content">
+        <div id="rent-gas-notice" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--amber)">
+          ⚠ 임대료 정산 데이터를 저장하려면 Apps Script 재배포가 필요합니다. <strong>설정 → Apps Script 코드 복사</strong> 후 배포 관리에서 새 버전으로 재배포하세요.
+        </div>
+        <div class="stats-row" style="margin-bottom:20px">
+          <div class="stat-card card-teal"><div class="stat-icon bg-teal">🏢</div><div class="stat-label">정산 대상 단지</div><div class="stat-val green" id="rent-s-count">–</div><div class="stat-sub">선택 기간·주기 기준</div></div>
+          <div class="stat-card card-blue"><div class="stat-icon bg-blue">💸</div><div class="stat-label">지급 임대료 합계</div><div class="stat-val" id="rent-s-total">–</div><div class="stat-sub">원 (부가세 포함)</div></div>
+          <div class="stat-card card-amber"><div class="stat-icon bg-amber">📄</div><div class="stat-label">미발행</div><div class="stat-val amber" id="rent-s-notissued">–</div><div class="stat-sub">정산서 발행 전 단지</div></div>
+          <div class="stat-card card-red"><div class="stat-icon bg-red">⏳</div><div class="stat-label">처리 중 (전체 기간)</div><div class="stat-val red" id="rent-s-pending">–</div><div class="stat-sub">지급 완료 전 발행 건</div></div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span class="title-bar"></span>정산 대상 단지 <span id="rent-cycle-label" style="font-weight:400;color:var(--muted)"></span></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>단지명</th><th>주기</th><th>산정 조건</th><th style="text-align:right">기간 충전금액</th><th style="text-align:right">산정 기준금액</th><th style="text-align:right">지급 임대료</th><th>매출 입력</th><th>발행 상태</th><th></th></tr></thead>
+              <tbody id="rent-table"><tr><td colspan="9" class="loading"><div class="spinner"></div><br>동기화 후 표시됩니다</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-section" style="margin-top:20px">
+          <div class="dash-section-head">
+            <span class="dash-section-title"><span class="title-bar"></span>정산 발행대장</span>
+            <select class="filter" id="settle-filter" onchange="renderSettleLedger()">
+              <option value="">전체 상태</option><option>발송 대기</option><option>세금계산서 대기</option><option>지급 대기</option><option>지급 완료</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>정산서번호</th><th>단지명</th><th>정산기간</th><th style="text-align:right">지급 임대료</th><th>발행일</th><th>발송일</th><th>세금계산서</th><th>지급일</th><th>상태</th><th></th></tr></thead>
+              <tbody id="settle-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 일정 관리 (월별 달력) -->
+    <div class="page" id="page-schedule">
+      <div class="cal-toolbar">
+        <button class="cal-nav-btn" onclick="calMove(-1)" title="이전 달">◀</button>
+        <span class="cal-title" id="cal-title">–</span>
+        <button class="cal-nav-btn" onclick="calMove(1)" title="다음 달">▶</button>
+        <button class="cal-today-btn" onclick="calToday()">오늘</button>
+        <button class="btn btn-primary ml-auto" onclick="openScheduleModal()">+ 일정 등록</button>
+      </div>
+      <div class="page-content">
+        <!-- 구버전 GAS 사용 시 재배포 안내 -->
+        <div id="sched-gas-notice" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--amber)">
+          ⚠ 일정 데이터를 불러오려면 Apps Script 재배포가 필요합니다. <strong>설정 → Apps Script 코드 복사</strong> 후 새 버전으로 재배포하세요.
+        </div>
+        <div class="cal-wrap">
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /main -->
+</div><!-- /app-body -->
+
+<!-- 모달: 단지 등록 -->
+<div class="modal-bg" id="modal-complex" onclick="closeModalBg(event,'modal-complex')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">단지 등록</span><button class="modal-close" onclick="closeModal('modal-complex')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>단지명 *</label><input type="text" id="c-name" placeholder="예) 다산 현대아이파크"></div>
+        <div class="form-group"><label>지역</label><input type="text" id="c-region" placeholder="남양주"></div>
+        <div class="form-group"><label>설치대수 *</label><input type="number" id="c-count" placeholder="0" min="1"></div>
+        <div class="form-group"><label>영업담당자</label><input type="text" id="c-manager" placeholder="이름"></div>
+        <div class="form-group"><label>입대의 연락처</label><input type="text" id="c-contact" placeholder="010-0000-0000"></div>
+        <div class="form-group full"><label>주소</label><input type="text" id="c-address" placeholder="경기도 남양주시..."></div>
+        <div class="form-group full"><label>시리얼 번호 (쉼표로 구분)</label><textarea id="c-serials" placeholder="AC-2025-0001, AC-2025-0002, ..."></textarea></div>
+        <div class="form-group"><label>계약일</label><input type="date" id="c-contract-date"></div>
+        <div class="form-group"><label>시공일</label><input type="date" id="c-date"></div>
+        <!-- 개통일: 계약기간(7년) 산정 기준일. 입력 시 계약만료일 자동 계산 -->
+        <div class="form-group"><label>개통일</label><input type="date" id="c-activation-date" onchange="autoFillExpire('c')"></div>
+        <div class="form-group"><label>계약 만료일</label><input type="date" id="c-expire"></div>
+        <div class="form-group"><label>시공업체</label><input type="text" id="c-contractor" placeholder="예) 알뜰에너지솔루션"></div>
+        <div class="form-group"><label>i-Sensor 설치</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="c-isensor-radio" id="c-isensor-yes" value="알뜰차저 i-Sensor" checked>
+              ✅ 설치
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="c-isensor-radio" id="c-isensor-no" value="미설치">
+              ❌ 미설치
+            </label>
+          </div>
+        </div>
+        <div class="form-group"><label>사업유형 *</label>
+          <select id="c-biztype"><option value="운영">🔄 운영 (임대료 지급)</option><option value="운영(비배분)">⚙️ 운영</option><option value="운영대행">🛠️ 운영대행형</option><option value="판매">💰 판매 (단순판매형)</option></select>
+        </div>
+        <div class="form-group"><label>상태</label>
+          <select id="c-status"><option>계약중</option><option>계약완료</option><option>설치완료</option><option>운영중</option></select>
+        </div>
+        <!-- 비고: 단지 관련 메모 (특이사항, 협의 내용 등) -->
+        <div class="form-group full"><label>비고</label><textarea id="c-memo" placeholder="특이사항, 협의 내용, 요청사항 등 자유롭게 메모" style="min-height:70px"></textarea></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-complex')">취소</button><button class="btn btn-primary" onclick="submitComplex()">등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 거점 일괄 등록 (충전소 1거점에 여러 충전기를 한 번에 등록) -->
+<div class="modal-bg" id="modal-charger-bulk" onclick="closeModalBg(event,'modal-charger-bulk')">
+  <div class="modal" style="width:720px">
+    <div class="modal-head"><span class="modal-title">📋 거점 일괄 등록</span><button class="modal-close" onclick="closeModal('modal-charger-bulk')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>단지명(충전소명) *</label><select id="chb-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group"><label>거점 *</label><input type="text" id="chb-site" placeholder="1거점"></div>
+        <div class="form-group full"><label>상세위치</label><input type="text" id="chb-location" placeholder="지하2층 A02-03기둥"></div>
+        <div class="form-group"><label>설치일</label><input type="date" id="chb-date"></div>
+        <div class="form-group"><label>상태</label>
+          <select id="chb-status"><option>정상</option><option>점검중</option><option>수리중</option></select>
+        </div>
+        <div class="form-group full">
+          <label>엑셀에서 붙여넣기 (선택) — 충전기 칸(시리얼번호·QR번호)을 복사해 붙여넣으면 아래 표에 자동 입력됩니다</label>
+          <textarea id="chb-paste" style="min-height:70px" placeholder="예)&#10;1번 충전기	기기 시리얼번호	E-D-001881&#10;	QR충전기번호	307724&#10;또는 한 줄에 'E-D-001881 307724'"></textarea>
+          <div style="display:flex;justify-content:flex-end"><button class="btn" style="font-size:12px;padding:5px 12px" onclick="chbApplyPaste()">⤵ 표에 적용</button></div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th style="width:70px">번호</th><th>기기 시리얼번호 *</th><th>QR충전기번호</th><th style="width:40px"></th></tr></thead>
+          <tbody id="chb-rows"></tbody>
+        </table>
+      </div>
+      <button class="btn" style="margin-top:8px;font-size:12px;padding:5px 12px" onclick="chbAddRow()">+ 충전기 행 추가</button>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-charger-bulk')">취소</button><button class="btn btn-primary" id="chb-submit-btn" onclick="submitChargerBulk()">일괄 등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 충전기 등록 -->
+<div class="modal-bg" id="modal-charger" onclick="closeModalBg(event,'modal-charger')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title" id="ch-modal-title">충전기 등록</span><button class="modal-close" onclick="closeModal('modal-charger')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ch-edit-idx">
+      <div class="form-grid">
+        <div class="form-group"><label>시리얼 번호 *</label><input type="text" id="ch-serial" placeholder="E-D-001881" class="mono"></div>
+        <div class="form-group"><label>QR충전기번호</label><input type="text" id="ch-qr" placeholder="307724" class="mono"></div>
+        <div class="form-group"><label>단지명(충전소명) *</label><select id="ch-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group"><label>거점</label><input type="text" id="ch-site" placeholder="1거점"></div>
+        <div class="form-group"><label>충전기 번호</label><input type="number" id="ch-no" min="1" placeholder="1"></div>
+        <div class="form-group"><label>상세위치</label><input type="text" id="ch-location" placeholder="지하2층 A02-03기둥"></div>
+        <div class="form-group"><label>설치일</label><input type="date" id="ch-date"></div>
+        <div class="form-group"><label>상태</label>
+          <select id="ch-status"><option>정상</option><option>점검중</option><option>수리중</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-charger')">취소</button><button class="btn btn-primary" id="ch-submit-btn" onclick="submitCharger()">등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 충전기 입고 등록 (재고 관리) -->
+<div class="modal-bg" id="modal-inbound" onclick="closeModalBg(event,'modal-inbound')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">충전기 입고 등록</span><button class="modal-close" onclick="closeModal('modal-inbound')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>입고일 *</label><input type="date" id="in-date"></div>
+        <div class="form-group"><label>수량 (대) *</label><input type="number" id="in-qty" min="1" placeholder="20"></div>
+        <div class="form-group"><label>모델명</label><input type="text" id="in-model" placeholder="예: 7kW 완속충전기"></div>
+        <div class="form-group"><label>공급처</label><input type="text" id="in-supplier" placeholder="예: 스타코프"></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="in-memo" placeholder="메모 (선택)"></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-inbound')">취소</button><button class="btn btn-primary" onclick="submitInbound()">등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 아이센서 입출고 등록 (재고 관리) -->
+<div class="modal-bg" id="modal-isensor" onclick="closeModalBg(event,'modal-isensor')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">아이센서 입출고 등록</span><button class="modal-close" onclick="closeModal('modal-isensor')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>구분 *</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="is-type-radio" id="is-type-in" value="입고" checked onchange="isTypeChanged()">
+              📥 입고
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="is-type-radio" id="is-type-out" value="출고" onchange="isTypeChanged()">
+              📤 출고 (설치)
+            </label>
+          </div>
+        </div>
+        <div class="form-group"><label>일자 *</label><input type="date" id="is-date"></div>
+        <div class="form-group"><label>수량 (대) *</label><input type="number" id="is-qty" min="1" placeholder="10"></div>
+        <div class="form-group" id="is-complex-group" style="display:none"><label>단지명 *</label><select id="is-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group" id="is-model-group"><label>모델명/공급처</label><input type="text" id="is-model" placeholder="예: iSensor-100 / 스타코프"></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="is-memo" placeholder="메모 (선택)"></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-isensor')">취소</button><button class="btn btn-primary" onclick="submitIsensor()">등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 일정 등록/수정 -->
+<div class="modal-bg" id="modal-schedule" onclick="closeModalBg(event,'modal-schedule')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title" id="sc-modal-title">일정 등록</span><button class="modal-close" onclick="closeModal('modal-schedule')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sc-edit-idx" value="">
+      <div class="form-grid">
+        <div class="form-group"><label>날짜 *</label><input type="date" id="sc-date"></div>
+        <div class="form-group"><label>담당자 *</label><input type="text" id="sc-who" placeholder="예: 박소정"></div>
+        <div class="form-group full"><label>내용 *</label><input type="text" id="sc-text" placeholder="예: 브라운스톤공덕 입찰 마감"></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="sc-memo" placeholder="메모 (선택)"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" id="sc-delete-btn" style="display:none;color:var(--red);margin-right:auto" onclick="deleteScheduleFromModal()">🗑 삭제</button>
+      <button class="btn" onclick="closeModal('modal-schedule')">취소</button>
+      <button class="btn btn-primary" id="sc-submit-btn" onclick="submitSchedule()">등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: A/S 접수 -->
+<div class="modal-bg" id="modal-as" onclick="closeModalBg(event,'modal-as')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">A/S 접수</span><button class="modal-close" onclick="closeModal('modal-as')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>단지명 *</label><select id="as-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group"><label>시리얼 번호 *</label><input type="text" id="as-serial" placeholder="AC-2025-0001" class="mono"></div>
+        <div class="form-group full"><label>증상 *</label><input type="text" id="as-symptom" placeholder="충전 오류, 카드 인식 불가 등"></div>
+        <div class="form-group full"><label>상세 내용</label><textarea id="as-detail" placeholder="고객 접수 내용, 오류 코드 등 상세히 기입..."></textarea></div>
+        <div class="form-group"><label>접수 경로</label>
+          <select id="as-channel"><option>전화</option><option>앱 신고</option><option>관리소 연락</option><option>직접 방문</option></select>
+        </div>
+        <div class="form-group"><label>담당자</label><input type="text" id="as-manager" placeholder="담당자 이름"></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-as')">취소</button><button class="btn btn-primary" onclick="submitAS()">접수</button></div>
+  </div>
+</div>
+
+<!-- 모달: 매출 입력 -->
+<div class="modal-bg" id="modal-sales" onclick="closeModalBg(event,'modal-sales')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">매출 실적 입력</span><button class="modal-close" onclick="closeModal('modal-sales')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>단지명 *</label><select id="sl-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group"><label>연도 *</label><input type="number" id="sl-year" placeholder="2026" min="2020" max="2099"></div>
+        <div class="form-group"><label>월 *</label>
+          <select id="sl-month">
+            <option value="01">1월</option><option value="02">2월</option><option value="03">3월</option>
+            <option value="04">4월</option><option value="05">5월</option><option value="06">6월</option>
+            <option value="07">7월</option><option value="08">8월</option><option value="09">9월</option>
+            <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+          </select>
+        </div>
+        <div class="form-group"><label>매출액(원) *</label><input type="number" id="sl-amount" placeholder="0" min="0"></div>
+        <div class="form-group"><label>충전량(kWh) <span style="color:var(--amber)">※ Wh 아님</span></label><input type="number" id="sl-kwh" placeholder="예) 5936.6" min="0" step="0.1"></div>
+        <div class="form-group full"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="sl-promo" style="width:auto"> 프로모션(이벤트) 요금 적용 월 <span style="color:var(--muted);font-size:12px">— 임대료 '프로모션 매출 제외' 단지는 이 매출을 빼고 계산</span></label></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="sl-note" placeholder="특이사항..."></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-sales')">취소</button><button class="btn btn-primary" onclick="submitSales()">등록</button></div>
+  </div>
+</div>
+
+<!-- 모달: 매출 수정 -->
+<div class="modal-bg" id="modal-sales-edit" onclick="closeModalBg(event,'modal-sales-edit')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">매출 실적 수정</span><button class="modal-close" onclick="closeModal('modal-sales-edit')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sl-edit-idx">
+      <div class="form-grid">
+        <div class="form-group full"><label>단지명</label><input type="text" id="sl-edit-complex" readonly style="background:var(--bg)"></div>
+        <div class="form-group"><label>연월</label><input type="text" id="sl-edit-ym" readonly style="background:var(--bg)"></div>
+        <div class="form-group"><label>매출액(원) *</label><input type="number" id="sl-edit-amount" min="0"></div>
+        <div class="form-group"><label>충전량(kWh) <span style="color:var(--amber)">※ Wh 아님</span></label><input type="number" id="sl-edit-kwh" min="0" step="0.1"></div>
+        <div class="form-group full"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="sl-edit-promo" style="width:auto"> 프로모션(이벤트) 요금 적용 월 <span style="color:var(--muted);font-size:12px">— 임대료 '프로모션 매출 제외' 단지는 이 매출을 빼고 계산</span></label></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="sl-edit-note"></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-sales-edit')">취소</button><button class="btn btn-primary" onclick="submitSalesEdit()">저장</button></div>
+  </div>
+</div>
+
+
+<!-- 모달: 단지 수정 -->
+<div class="modal-bg" id="modal-complex-edit" onclick="closeModalBg(event,'modal-complex-edit')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">단지 수정</span><button class="modal-close" onclick="closeModal('modal-complex-edit')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-idx">
+      <div class="form-grid">
+        <div class="form-group full"><label>단지명 *</label><input type="text" id="edit-name" placeholder="예) 다산 현대아이파크"></div>
+        <div class="form-group"><label>지역</label><input type="text" id="edit-region" placeholder="남양주"></div>
+        <div class="form-group"><label>설치대수 *</label><input type="number" id="edit-count" placeholder="0" min="1"></div>
+        <div class="form-group"><label>영업담당자</label><input type="text" id="edit-manager" placeholder="이름"></div>
+        <div class="form-group"><label>입대의 연락처</label><input type="text" id="edit-contact" placeholder="010-0000-0000"></div>
+        <div class="form-group full"><label>주소</label><input type="text" id="edit-address" placeholder="경기도 남양주시..."></div>
+        <div class="form-group full"><label>시리얼 번호 (쉼표로 구분)</label><textarea id="edit-serials" placeholder="AC-2025-0001, AC-2025-0002, ..."></textarea></div>
+        <div class="form-group"><label>계약일</label><input type="date" id="edit-contract-date"></div>
+        <div class="form-group"><label>시공일</label><input type="date" id="edit-date"></div>
+        <!-- 개통일: 계약기간(7년) 산정 기준일. 입력 시 계약만료일 자동 계산 -->
+        <div class="form-group"><label>개통일</label><input type="date" id="edit-activation-date" onchange="autoFillExpire('edit')"></div>
+        <div class="form-group"><label>계약 만료일</label><input type="date" id="edit-expire"></div>
+        <div class="form-group"><label>시공업체</label><input type="text" id="edit-contractor" placeholder="예) 알뜰에너지솔루션"></div>
+        <div class="form-group"><label>i-Sensor 설치</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="edit-isensor-radio" id="edit-isensor-yes" value="알뜰차저 i-Sensor"> ✅ 설치
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer">
+              <input type="radio" name="edit-isensor-radio" id="edit-isensor-no" value="미설치"> ❌ 미설치
+            </label>
+          </div>
+        </div>
+        <div class="form-group"><label>사업유형 *</label>
+          <select id="edit-biztype"><option value="운영">🔄 운영 (임대료 지급)</option><option value="운영(비배분)">⚙️ 운영</option><option value="운영대행">🛠️ 운영대행형</option><option value="판매">💰 판매 (단순판매형)</option></select>
+        </div>
+        <div class="form-group"><label>상태</label>
+          <select id="edit-status"><option>계약중</option><option>계약완료</option><option>설치완료</option><option>운영중</option></select>
+        </div>
+        <!-- 비고: 단지 관련 메모 (특이사항, 협의 내용 등) -->
+        <div class="form-group full"><label>비고</label><textarea id="edit-memo" placeholder="특이사항, 협의 내용, 요청사항 등 자유롭게 메모" style="min-height:70px"></textarea></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-complex-edit')">취소</button><button class="btn btn-primary" onclick="submitEditComplex()">저장</button></div>
+  </div>
+</div>
+<!-- 모달: 임대료 조건 등록/수정 -->
+<div class="modal-bg" id="modal-rent-cond" onclick="closeModalBg(event,'modal-rent-cond')">
+  <div class="modal" style="width:640px">
+    <div class="modal-head"><span class="modal-title" id="rc-title">임대료 조건 등록</span><button class="modal-close" onclick="closeModal('modal-rent-cond')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="rc-idx">
+      <div class="form-grid">
+        <div class="form-group"><label>단지명 *</label><select id="rc-complex" onchange="rcComplexChanged()"><option value="">단지 선택...</option></select></div>
+        <div class="form-group"><label>단지코드 * (정산서 번호·폴더명에 사용)</label><input type="text" id="rc-code" placeholder="A001" class="mono"></div>
+        <div class="form-group full" style="margin-top:4px"><label style="font-weight:600;color:var(--teal)">■ 정산 조건 (계약서 기준)</label></div>
+        <div class="form-group"><label>임대료율 (%, 부가세 포함)</label><input type="number" id="rc-rate" min="0" step="0.1" placeholder="5"></div>
+        <div class="form-group"><label>산정 기준</label><select id="rc-basis"><option value="결제총액">결제총액 (부가세 포함)</option><option value="공급가액">공급가액 (결제총액 ÷ 1.1)</option></select></div>
+        <div class="form-group"><label>월 최소임대료 (원, 없으면 0)</label><input type="number" id="rc-min" min="0" step="1000" placeholder="0"></div>
+        <div class="form-group"><label>프로모션 매출</label><select id="rc-promo"><option value="포함">포함 (실결제액 기준)</option><option value="제외">제외</option></select></div>
+        <div class="form-group"><label>정산 주기</label><select id="rc-cycle"><option>분기</option><option>월</option></select></div>
+        <div class="form-group"><label>사용</label><select id="rc-active"><option value="Y">사용</option><option value="N">사용 안 함 (협상 중·해지)</option></select></div>
+        <div class="form-group full" style="margin-top:4px"><label style="font-weight:600;color:var(--teal)">■ 수신처 (정산서 발송용)</label></div>
+        <div class="form-group"><label>수신</label><input type="text" id="rc-recv" placeholder="입주자대표회의 회장 귀하"></div>
+        <div class="form-group"><label>담당자 (관리소장)</label><input type="text" id="rc-manager" placeholder="관리소장 홍길동"></div>
+        <div class="form-group"><label>전화</label><input type="text" id="rc-phone" placeholder="02-000-0000"></div>
+        <div class="form-group"><label>팩스</label><input type="text" id="rc-fax" placeholder="02-000-0001"></div>
+        <div class="form-group full"><label>이메일</label><input type="text" id="rc-email" placeholder="apt@example.com"></div>
+        <div class="form-group"><label>은행</label><input type="text" id="rc-bank" placeholder="○○은행"></div>
+        <div class="form-group"><label>계좌번호</label><input type="text" id="rc-account" placeholder="000-0000-0000-00"></div>
+        <div class="form-group"><label>예금주</label><input type="text" id="rc-holder" placeholder="○○아파트 입주자대표회의"></div>
+        <div class="form-group"><label>계약번호</label><input type="text" id="rc-contract" placeholder="AC-2026-001"></div>
+        <div class="form-group"><label>단지 사업자등록번호</label><input type="text" id="rc-bizno" placeholder="000-00-00000 (없으면 비움)"></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="rc-memo" placeholder="협상 내용, 증빙 방식 등"></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">주소는 단지 관리에 등록된 주소를 사용합니다.</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" id="rc-delete-btn" style="display:none;color:var(--red);margin-right:auto" onclick="deleteRentCond()">🗑 삭제</button>
+      <button class="btn" onclick="closeModal('modal-rent-cond')">취소</button>
+      <button class="btn btn-primary" onclick="submitRentCond()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 정산서 발행 -->
+<div class="modal-bg" id="modal-rent-issue" onclick="closeModalBg(event,'modal-rent-issue')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">📄 정산서 발행</span><button class="modal-close" onclick="closeModal('modal-rent-issue')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ri-idx">
+      <div id="ri-summary" style="margin-bottom:16px"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>발행일 *</label><input type="date" id="ri-issue"></div>
+        <div class="form-group"><label>지급 예정일 (기본: 익월 말일)</label><input type="date" id="ri-due"></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+        새 창에서 정산서가 열리면 <b>🖨 인쇄 / PDF로 저장</b>을 누르세요. 파일명은 정산서 번호_단지명_기간으로 자동 지정됩니다.
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-rent-issue')">취소</button>
+      <button class="btn" onclick="rentIssue(false)">👁 미리보기만</button>
+      <button class="btn btn-primary" onclick="rentIssue(true)">📒 발행 + 대장 기록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 발행대장 처리 -->
+<div class="modal-bg" id="modal-settle-edit" onclick="closeModalBg(event,'modal-settle-edit')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">발행대장 처리</span><button class="modal-close" onclick="closeModal('modal-settle-edit')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="se-idx">
+      <div id="se-head" style="font-size:13px;margin-bottom:14px"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>① 발송일 <a href="javascript:settleToday('se-sent')" style="color:var(--teal)">오늘</a></label><input type="date" id="se-sent"></div>
+        <div class="form-group"><label>발송방법</label><select id="se-method"><option>이메일</option><option>팩스</option><option>우편</option><option>방문</option></select></div>
+        <div class="form-group"><label>② 세금계산서 수취일 <a href="javascript:settleToday('se-tax')" style="color:var(--teal)">오늘</a></label><input type="date" id="se-tax"></div>
+        <div class="form-group"><label>③ 지급일 <a href="javascript:settleToday('se-paid')" style="color:var(--teal)">오늘</a></label><input type="date" id="se-paid"></div>
+        <div class="form-group full"><label>비고</label><input type="text" id="se-memo" placeholder="예) 영수증 대체, 재발송 등"></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-settle-edit')">취소</button><button class="btn btn-primary" onclick="submitSettleEdit()">저장</button></div>
+  </div>
+</div>
+
+<!-- 모달: 발신 담당자 (이 PC에 저장) -->
+<div class="modal-bg" id="modal-rent-sender" onclick="closeModalBg(event,'modal-rent-sender')">
+  <div class="modal" style="width:440px">
+    <div class="modal-head"><span class="modal-title">👤 정산서 발신 담당자</span><button class="modal-close" onclick="closeModal('modal-rent-sender')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>담당자 이름</label><input type="text" id="rs-name" placeholder="홍길동 과장"></div>
+        <div class="form-group full"><label>연락처</label><input type="text" id="rs-phone" placeholder="1577-8612"></div>
+        <div class="form-group full"><label>이메일</label><input type="text" id="rs-email" placeholder="altteulcharger@altteulcharger.co.kr"></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">이 PC의 브라우저에 저장됩니다. 다른 PC에서는 한 번 더 입력하세요.</div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-rent-sender')">취소</button><button class="btn btn-primary" onclick="saveRentSender()">저장</button></div>
+  </div>
+</div>
+
+<!-- 삭제 확인 다이얼로그 -->
+<div class="confirm-bg" id="confirm-dialog">
+  <div class="confirm-box">
+    <h3>🗑 삭제 확인</h3>
+    <p id="confirm-msg">이 항목을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.</p>
+    <div class="confirm-actions">
+      <button class="btn" onclick="closeConfirm()">취소</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 최신 GAS 배포 URL (v5)
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbyJ2yEHiLhuumNLRfgnQsvnUYYFQ2LeGiSb6v0Be8dMWPMEj123HDgY6zkaXSLeogVa/exec';
+// 구버전 URL이 저장돼 있으면 자동으로 새 URL로 이전 (직원 PC 대응)
+const GAS_URL_OLD = 'https://script.google.com/macros/s/AKfycbyAWqFuf08AbXY4IgTayhXst2FvvHlx2sCRY2MKw-J8yDLbPP7hc_yhZnZri1sukffB/exec';
+let GAS_URL = localStorage.getItem('altteul_gas_url') || GAS_URL_DEFAULT;
+if(GAS_URL === GAS_URL_OLD) { GAS_URL = GAS_URL_DEFAULT; localStorage.setItem('altteul_gas_url', GAS_URL_DEFAULT); }
+let DB = { complexes:[], chargers:[], as:[], contracts:[], sales:[], inbound:[], isensor:[], schedules:[], rentConds:[], settles:[] };
+
+// 캐시에서 DB 복원
+(function(){
+  try {
+    const cached = localStorage.getItem('altteul_db_cache');
+    if(cached) { DB = JSON.parse(cached); ['schedules','rentConds','settles'].forEach(k=>{ if(!Array.isArray(DB[k])) DB[k] = []; }); }
+  } catch(e) {}
+})();
+
+// 대시보드 날짜 표시
+(function(){
+  const el = document.getElementById('dash-date-str');
+  if(el){
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  }
+})();
+
+window.addEventListener('DOMContentLoaded', function(){
+  // 설정 페이지 URL 자동 채우기
+  const urlInput = document.getElementById('gas-url');
+  if(urlInput && GAS_URL) urlInput.value = GAS_URL;
+  showPage('dashboard');
+  // 캐시 데이터 있으면 즉시 렌더링 후 동기화
+  if(DB.complexes.length || DB.chargers.length || DB.as.length || DB.contracts.length) {
+    renderAll();
+    setSyncStatus('캐시 로드됨 — 동기화 중...');
+  }
+  syncAll();
+});
+
+// i-Sensor 라디오버튼 (설치/미설치)
+
+function saveGasUrl() {
+  const url = document.getElementById('gas-url').value.trim();
+  if(!url.startsWith('https://script.google.com')) { showToast('올바른 Apps Script URL을 입력하세요'); return; }
+  GAS_URL = url; localStorage.setItem('altteul_gas_url', url); showToast('URL 저장됨');
+}
+function clearCache() {
+  localStorage.removeItem('altteul_db_cache');
+  DB = { complexes:[], chargers:[], as:[], contracts:[], sales:[], inbound:[], isensor:[], schedules:[], rentConds:[], settles:[] };
+  renderAll();
+  showToast('캐시 초기화 완료 — 동기화 버튼을 눌러 새로 불러오세요');
+}
+
+function testConnection() {
+  saveGasUrl(); if(!GAS_URL) return;
+  const res = document.getElementById('test-result');
+  if(res){ res.style.display='block'; res.textContent='연결 테스트 중...'; res.style.color='var(--muted)'; }
+  showToast('연결 중...');
+  fetch(GAS_URL+'?action=ping')
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.ok){
+        showToast('✅ 연결 성공!');
+        if(res){ res.textContent='✅ 연결 성공! 대시보드로 이동합니다.'; res.style.color='var(--teal)'; }
+        showPage('dashboard'); syncAll();
+      } else {
+        showToast('연결 실패: '+d.error);
+        if(res){ res.textContent='❌ 오류: '+d.error+' — Apps Script를 새 버전으로 재배포해 주세요.'; res.style.color='var(--red)'; }
+      }
+    })
+    .catch(err=>{
+      const msg = '연결 실패: 네트워크 오류 또는 URL 오류. Apps Script 웹앱이 "모든 사용자"에게 배포되어 있는지 확인하세요.';
+      showToast(msg);
+      if(res){ res.textContent='❌ '+msg; res.style.color='var(--red)'; }
+    });
+}
+
+function syncAll() {
+  if(!GAS_URL) { setSyncStatus('URL 미설정'); return; }
+  setSyncStatus('동기화 중...');
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 15000);
+  fetch(GAS_URL+'?action=getAll', {signal: controller.signal})
+    .then(r=>{ clearTimeout(timeout); return r.json(); })
+    .then(d=>{
+      if(d.error){ setSyncStatus('⚠ GAS 오류'); showToast('동기화 오류: '+d.error); return; }
+      if(Array.isArray(d.complexes)) DB.complexes = d.complexes;
+      if(Array.isArray(d.chargers))  DB.chargers  = d.chargers;
+      if(Array.isArray(d.as))        DB.as        = d.as;
+      if(Array.isArray(d.contracts)) DB.contracts = d.contracts;
+      if(Array.isArray(d.sales))     DB.sales     = d.sales;
+      // 입고(재고) 데이터: 구버전 GAS는 inbound 키가 없음 → 재배포 안내 플래그 설정
+      gasHasInbound = Array.isArray(d.inbound);
+      if(gasHasInbound) DB.inbound = d.inbound;
+      // 아이센서 입출고(재고) 데이터: 구버전 GAS는 isensor 키가 없음 → 재배포 안내 플래그 설정
+      gasHasIsensor = Array.isArray(d.isensor);
+      if(gasHasIsensor) DB.isensor = d.isensor;
+      // 일정 데이터: 구버전 GAS는 schedules 키가 없음 → 달력 페이지에 재배포 안내 표시
+      gasHasSchedules = Array.isArray(d.schedules);
+      if(gasHasSchedules) DB.schedules = d.schedules;
+      const scNotice = document.getElementById('sched-gas-notice');
+      if(scNotice) scNotice.style.display = gasHasSchedules ? 'none' : 'block';
+      // 임대료 정산 데이터: 구버전 GAS는 rentConds/settles 키가 없음 → 재배포 안내
+      gasHasRent = Array.isArray(d.rentConds);
+      if(gasHasRent) { DB.rentConds = d.rentConds; DB.settles = Array.isArray(d.settles) ? d.settles : []; }
+      // 시트 목록 확인 (디버그: 충전기 시트 이름 불일치 감지)
+      if(d._sheets && !d._sheets.includes('충전기')) {
+        showToast('⚠ 시트명 오류: 구글 시트에 "충전기" 탭이 없습니다. 탭명을 확인하세요. 현재: ' + d._sheets.join(', '));
+      }
+      try { localStorage.setItem('altteul_db_cache', JSON.stringify(DB)); } catch(e){}
+      renderAll();
+      setSyncStatus('✔ 동기화: '+new Date().toLocaleTimeString('ko'));
+    })
+    .catch(err=>{
+      clearTimeout(timeout);
+      const isAbort = err.name==='AbortError';
+      setSyncStatus(isAbort ? '⏱ 응답 초과 (캐시)' : '📵 오프라인 (캐시)');
+      renderAll();
+      showToast(isAbort ? '서버 응답 없음 — 캐시 데이터 표시' : '네트워크 오프라인 — 캐시 데이터 표시');
+    });
+}
+function setSyncStatus(t){ document.getElementById('sync-status').textContent=t; }
+
+function gasPost(data, onSuccess) {
+  if(!GAS_URL){ showToast('먼저 설정에서 URL을 입력하세요'); return; }
+  fetch(GAS_URL, {method:'POST', body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{
+    if(d.ok){ if(onSuccess) onSuccess(d); syncAll(); } else showToast('오류: '+(d.error||'알 수 없음'));
+  }).catch(()=>showToast('서버 연결 실패'));
+}
+
+function renderAll() { renderDashboard(); renderComplexes(); renderChargers(); renderInventory(); renderIsensor(); renderAS(); renderContracts(); renderRent(); renderCalendar(); }
+
+function badgeHtml(status) {
+  const m={'운영중':'green','설치완료':'blue','계약완료':'amber','계약중':'gray','정상':'green','점검중':'amber','수리중':'red','미처리':'red','처리중':'amber','완료':'green','만료임박':'amber','만료':'gray'};
+  return `<span class="badge badge-${m[status]||'gray'}">${status}</span>`;
+}
+function isensorBadge(val) {
+  if(!val || val==='알뜰차저 i-Sensor' || val==='설치') return `<span class="isensor-own">✅ 설치</span>`;
+  return `<span class="isensor-other">❌ 미설치</span>`;
+}
+// i-Sensor 값 정규화: '설치' → '알뜰차저 i-Sensor' 통일
+function normalizeIsensor(val) {
+  if(!val || val==='설치' || val==='알뜰차저 i-Sensor') return '알뜰차저 i-Sensor';
+  return '미설치';
+}
+function fmtDate(d){
+  if(!d) return '-';
+  try {
+    const s = String(d);
+    if(s.includes('T')) {
+      const kst = new Date(new Date(s).getTime() + 9*60*60*1000);
+      return kst.toISOString().substring(0,10).replace(/-/g,'.');
+    }
+    return s.substring(0,10).replace(/-/g,'.');
+  } catch(e) { return '-'; }
+}
+// 매출실적 '연월'(YYYY-MM) 보정: 구글시트가 "2026-08" 같은 문자열을 날짜(2026-08-01 00:00 KST)로
+// 자동 변환하면, GAS가 이를 JSON으로 보낼 때 UTC 기준으로 직렬화되어 "2026-07-31T15:00:00.000Z"처럼
+// 하루(=한 달) 전으로 밀려서 온다. fmtDate와 동일하게 KST(+9h)로 보정한 뒤 연-월만 추출한다.
+function toYM(d){
+  if(!d) return '';
+  try {
+    const s = String(d);
+    if(s.includes('T')) {
+      const kst = new Date(new Date(s).getTime() + 9*60*60*1000);
+      return kst.toISOString().substring(0,7);
+    }
+    return s.substring(0,7);
+  } catch(e) { return String(d||'').substring(0,7); }
+}
+function toDateInput(val) {
+  if(!val) return '';
+  try {
+    const s = String(val);
+    if(s.includes('T')) {
+      const kst = new Date(new Date(s).getTime() + 9*60*60*1000);
+      return kst.toISOString().substring(0,10);
+    }
+    const r = s.substring(0,10).replace(/\./g,'-');
+    return /^\d{4}-\d{2}-\d{2}$/.test(r) ? r : '';
+  } catch(e) { return ''; }
+}
+function mono(t){ return `<span class="mono">${t||'-'}</span>`; }
+
+function renderDashboard() {
+  const c=DB.complexes||[], ch=DB.chargers||[], as=DB.as||[], ct=DB.contracts||[];
+  document.getElementById('s-complexes').textContent=c.length;
+  // 시리얼 등록 수 + 단지별 설치대수 합계
+  const totalInstalled=c.reduce((sum,r)=>sum+Number(r[3]||0),0);
+  document.getElementById('s-chargers').textContent=ch.length;
+  document.getElementById('s-chargers-sub').textContent=`시리얼 등록 ${ch.length}대`;
+  document.getElementById('s-chargers-count').textContent=`계약 기준 설치대수 합계 ${totalInstalled}대`;
+  const asOpen=as.filter(a=>a[6]!=='완료').length, asNew=as.filter(a=>a[6]==='미처리').length;
+  document.getElementById('s-as-open').textContent=asOpen;
+  document.getElementById('s-as-sub').textContent=`미처리 ${asNew}건 포함`;
+  // i-Sensor 통계
+  const ownCnt=c.filter(r=>!r[10]||r[10]==='알뜰차저 i-Sensor'||r[10]==='설치').length;
+  const pct=c.length?Math.round(ownCnt/c.length*100):0;
+  document.getElementById('s-isensor').textContent=pct+'%';
+  document.getElementById('s-isensor-sub').textContent=`${ownCnt}/${c.length}개 단지 설치`;
+
+  const asRecent=[...as].reverse().slice(0,5);
+  document.getElementById('dash-as-list').innerHTML=asRecent.length
+    ?asRecent.map(r=>`<tr onclick="showPage('as')"><td>${fmtDate(r[1])}</td><td>${r[2]||'-'}</td><td>${mono(r[3])}</td><td>${r[4]||'-'}</td><td>${badgeHtml(r[6])}</td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">A/S 데이터 없음</td></tr>';
+
+  // 최근 설치 단지: 상태가 '설치완료' 또는 '운영중'(설치를 마친 단지)만 표시, 시공일 최신순 5개
+  const cxRecent=c
+    .filter(r=>r[6]==='설치완료'||r[6]==='운영중')
+    .sort((a,b)=>new Date(b[2]||0)-new Date(a[2]||0))
+    .slice(0,5);
+  document.getElementById('dash-complex-list').innerHTML=cxRecent.length
+    ?cxRecent.map(r=>`<tr onclick="showPage('complexes')"><td>${r[0]||'-'}</td><td>${r[1]||'-'}</td><td>${fmtDate(r[11])}</td><td>${fmtDate(r[2])}</td><td>${r[3]||'-'}대</td><td>${isensorBadge(r[10])}</td><td>${r[5]||'-'}</td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">설치완료된 단지가 아직 없습니다</td></tr>';
+}
+
+// ── 단지 관리: 필터 + 페이지네이션 상태 ──
+const CX_PAGE_SIZE = 10; // 한 페이지에 표시할 단지 수
+// 사업유형: 시트(N열)에 저장되는 값 → 표시 정보. 기존 '운영' 데이터는 임대료 지급 단지로 유지 / '운영(비배분)'은 임대료 미지급 운영
+const BIZ_TYPES = {
+  '운영':       { full:'운영 (임대료 지급)', badge:'🔄 운영(임대료 지급)', cls:'badge-blue'   },
+  '운영(비배분)': { full:'운영',              badge:'⚙️ 운영',      cls:'badge-green'  },
+  '운영대행':    { full:'운영대행형',        badge:'🛠️ 대행',      cls:'badge-purple' },
+  '판매':       { full:'판매 (단순판매형)', badge:'💰 판매',      cls:'badge-amber'  },
+};
+function normBiz(v){ const t=String(v||'').trim(); return BIZ_TYPES[t] ? t : '운영'; }
+function bizBadgeHtml(v){ const b=BIZ_TYPES[normBiz(v)]; return `<span class="badge ${b.cls}">${b.badge}</span>`; }
+const CX_DONE_STATUSES = ['계약완료','설치완료','운영중']; // "완료" 탭에 속하는 상태
+let cxPage = 1;
+let cxTab = 'progress'; // 기본 탭: 진행중 (all | progress | done)
+let cxFilters = { search:'', status:'', isensor:'', biz:'' };
+
+// 해당 행이 특정 탭에 속하는지 판정 (상태 미입력 행은 "진행중"으로 취급)
+function cxTabMatch(r, tab) {
+  const st = r[6] || '';
+  if (tab === 'progress') return !CX_DONE_STATUSES.includes(st);
+  if (tab === 'done') return CX_DONE_STATUSES.includes(st);
+  return true; // 전체
+}
+
+// 탭 활성 표시 갱신 + 현재 탭 변경
+function cxApplyTab(tab) {
+  cxTab = tab;
+  document.querySelectorAll('.cx-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+}
+
+// 탭 클릭 시: 탭과 충돌하는 상태 필터는 초기화 후 렌더링
+function cxSetTab(tab) {
+  const statusTab = CX_DONE_STATUSES.includes(cxFilters.status) ? 'done' : 'progress';
+  if (cxFilters.status && tab !== 'all' && tab !== statusTab) {
+    cxFilters.status = '';
+    const sel = document.getElementById('cx-status-filter');
+    if (sel) sel.value = '';
+  }
+  cxApplyTab(tab);
+  cxPage = 1;
+  renderComplexes();
+}
+
+// 검색/필터 변경 시 상태 저장 후 1페이지부터 다시 렌더링
+function cxSetFilter(key, val) {
+  cxFilters[key] = val;
+  // 상태 드롭다운 선택 시 그 상태가 속한 탭으로 자동 전환 (전체 탭에서는 유지)
+  if (key === 'status' && val && cxTab !== 'all') {
+    const target = CX_DONE_STATUSES.includes(val) ? 'done' : 'progress';
+    if (cxTab !== target) cxApplyTab(target);
+  }
+  cxPage = 1;
+  renderComplexes();
+}
+
+// 페이지 이동
+function cxGoPage(p) {
+  cxPage = p;
+  renderComplexes();
+  // 페이지 전환 시 목록 상단으로 스크롤
+  document.getElementById('page-complexes').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// 탭을 제외한 검색/필터 조건 일치 여부 (탭별 개수 계산에도 재사용)
+function cxMatchesBase(r) {
+  // 검색어는 단지명 + 비고 내용에서 함께 검색
+  if (cxFilters.search) {
+    const q = cxFilters.search.toLowerCase();
+    const hit = String(r[0]||'').toLowerCase().includes(q) || String(r[14]||'').toLowerCase().includes(q);
+    if (!hit) return false;
+  }
+  if (cxFilters.status && (r[6]||'') !== cxFilters.status) return false;
+  if (cxFilters.isensor) {
+    const own = !r[10] || r[10]==='알뜰차저 i-Sensor' || r[10]==='설치';
+    if (cxFilters.isensor==='설치' && !own) return false;
+    if (cxFilters.isensor==='미설치' && own) return false;
+  }
+  if (cxFilters.biz && normBiz(r[13]) !== cxFilters.biz) return false;
+  return true;
+}
+
+// 필터 + 현재 탭 조건에 맞는 단지만 추출 (원본 인덱스 보존)
+function cxGetFiltered() {
+  const rows = DB.complexes || [];
+  return rows.map((r, idx) => ({r, idx})).filter(({r}) => cxMatchesBase(r) && cxTabMatch(r, cxTab));
+}
+
+// 탭별 개수 배지 갱신 (검색/필터는 반영, 탭 조건은 제외)
+function cxUpdateTabCounts() {
+  const base = (DB.complexes || []).filter(r => cxMatchesBase(r));
+  const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+  set('cx-cnt-all', base.length);
+  set('cx-cnt-progress', base.filter(r => cxTabMatch(r, 'progress')).length);
+  set('cx-cnt-done', base.filter(r => cxTabMatch(r, 'done')).length);
+}
+
+function renderComplexes() {
+  const all = DB.complexes || [];
+  const tbody = document.getElementById('complex-table');
+  const pgEl = document.getElementById('cx-pagination');
+  cxUpdateTabCounts(); // 탭 개수 배지는 항상 갱신
+  if (!all.length) {
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--muted)">등록된 단지 없음</td></tr>';
+    pgEl.innerHTML = '';
+    return;
+  }
+  const filtered = cxGetFiltered();
+  if (!filtered.length) {
+    // 현재 탭에 결과가 없을 때 안내 문구
+    const tabName = cxTab==='progress' ? '진행중인' : cxTab==='done' ? '완료된' : '조건에 맞는';
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--muted)">${tabName} 단지가 없습니다</td></tr>`;
+    pgEl.innerHTML = '';
+    return;
+  }
+  // 페이지 범위 계산
+  const totalPages = Math.ceil(filtered.length / CX_PAGE_SIZE);
+  if (cxPage > totalPages) cxPage = totalPages;
+  const startIdx = (cxPage - 1) * CX_PAGE_SIZE;
+  const pageRows = filtered.slice(startIdx, startIdx + CX_PAGE_SIZE);
+
+  const asData = DB.as || [];
+  tbody.innerHTML = pageRows.map(({r, idx}, pi) => {
+    const i = idx; // 수정/삭제용 원본 인덱스
+    const no = startIdx + pi + 1; // 표시용 번호 (필터 결과 기준 연번)
+    const asCnt=asData.filter(a=>a[2]===r[0]).length;
+    const serials=String(r[8]||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const isensorVal=normalizeIsensor(r[10]);
+    // r[11]=계약일, r[12]=시공업체, r[13]=사업유형
+    const contractDate=r[11]||'';
+    const contractor=r[12]||'-';
+    const bizType=normBiz(r[13]);
+    const memo=String(r[14]||'').trim(); // r[14]=비고
+    const bizBadge=bizBadgeHtml(bizType);
+    return `
+    <tr onclick="toggleDetail('cx-detail-${i}',this)">
+      <td style="text-align:center;color:var(--muted);font-size:12px">${no}</td>
+      <td><strong style="font-weight:500">${r[0]||'-'}</strong>${memo?' <span title="비고 있음" style="font-size:12px">📝</span>':''}</td>
+      <td>${r[1]||'-'}</td>
+      <td>${fmtDate(contractDate)}</td>
+      <td>${fmtDate(r[2])}</td>
+      <td>${contractor}</td>
+      <td>${r[3]||0}대</td>
+      <td>${asCnt>0?`<span style="color:var(--amber)">${asCnt}건</span>`:'0건'}</td>
+      <td>${r[5]||'-'}</td>
+      <td>${isensorBadge(isensorVal)}</td>
+      <td>${bizBadge}</td>
+      <td>${badgeHtml(r[6])}</td>
+    </tr>
+    <tr class="detail-row" id="cx-detail-${i}" style="display:none">
+      <td colspan="12"><div class="detail-inner">
+        <div class="detail-grid">
+          <div class="detail-section">
+            <div class="detail-title">시리얼 번호 (${serials.length}개)</div>
+            <div class="serial-tags">${serials.map(s=>`<span class="serial-tag">${s}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">등록된 시리얼 없음</span>'}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-title">계약 · 설치 정보</div>
+            <div class="detail-info">
+              <div class="detail-info-item"><span class="key">계약일</span><span class="val">${fmtDate(contractDate)||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">시공일</span><span class="val">${fmtDate(r[2])||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">개통일</span><span class="val">${fmtDate(r[15])||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">계약만료</span><span class="val">${fmtDate(r[9])||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">시공업체</span><span class="val">${contractor}</span></div>
+              <div class="detail-info-item"><span class="key">사업유형</span><span class="val">${BIZ_TYPES[bizType].full}</span></div>
+              <div class="detail-info-item"><span class="key">i-Sensor</span><span class="val">${isensorVal}</span></div>
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-title">단지 · 연락 정보</div>
+            <div class="detail-info">
+              <div class="detail-info-item" style="grid-column:1/-1"><span class="key">주소</span><span class="val">${r[7]||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">입대의 연락처</span><span class="val">${r[4]||'-'}</span></div>
+              <div class="detail-info-item"><span class="key">영업담당자</span><span class="val">${r[5]||'-'}</span></div>
+            </div>
+          </div>
+          <!-- 비고: 메모가 있을 때만 전체 폭으로 표시 -->
+          ${memo?`<div class="detail-section" style="grid-column:1/-1">
+            <div class="detail-title">📝 비고</div>
+            <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px">${memo}</div>
+          </div>`:''}
+        </div>
+        <div class="detail-actions">
+          <button class="btn" onclick="event.stopPropagation();openEditComplex(${i})">✏️ 수정</button>
+          <button class="btn btn-danger" style="margin-left:auto" onclick="event.stopPropagation();confirmDelete('complex',${i},'${String(r[0]||'').replace(/'/g,"\'")} 단지')">🗑 삭제</button>
+        </div>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  // 페이지네이션 버튼 렌더링 (필터된 단지의 설치대수 합계 포함)
+  const cxTotalUnits = filtered.reduce((s, {r}) => s + Number(r[3] || 0), 0);
+  renderCxPagination(totalPages, filtered.length, cxTotalUnits);
+}
+
+// 페이지 버튼 생성 (현재 페이지 주변 + 처음/끝, 중간 생략은 … 표시)
+function renderCxPagination(totalPages, totalCount, totalUnits) {
+  const el = document.getElementById('cx-pagination');
+  // 설치대수 합계 표기 (값이 있을 때만)
+  const unitsTxt = totalUnits ? ` · 설치대수 ${totalUnits}대` : '';
+  if (totalPages <= 1) {
+    el.innerHTML = `<span class="page-info">총 ${totalCount}개 단지${unitsTxt}</span>`;
+    return;
+  }
+  let html = `<button class="page-btn" ${cxPage===1?'disabled':''} onclick="cxGoPage(${cxPage-1})">‹</button>`;
+  const pages = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p===1 || p===totalPages || Math.abs(p-cxPage)<=1) pages.push(p);
+    else if (pages[pages.length-1] !== '…') pages.push('…');
+  }
+  html += pages.map(p => p==='…'
+    ? `<span style="color:var(--muted);padding:0 2px">…</span>`
+    : `<button class="page-btn ${p===cxPage?'active':''}" onclick="cxGoPage(${p})">${p}</button>`
+  ).join('');
+  html += `<button class="page-btn" ${cxPage===totalPages?'disabled':''} onclick="cxGoPage(${cxPage+1})">›</button>`;
+  html += `<span class="page-info">총 ${totalCount}개 단지${unitsTxt} · ${cxPage}/${totalPages} 페이지</span>`;
+  el.innerHTML = html;
+}
+
+// ── 충전기 재고: 입고 관리 ──
+// 잔여 재고 = 입고 수량 합계 − 설치 등록(시리얼 등록) 대수 → 충전기 등록 시 자동 차감 효과
+let gasHasInbound = true;
+let gasHasSchedules = true; // GAS v5 재배포 여부 (일정 시트 지원)  // 동기화 응답에 inbound 키가 없으면 구버전 GAS (재배포 필요)
+let invOpen = false;       // 입고 내역 펼침 상태
+
+function invToggle() {
+  invOpen = !invOpen;
+  const wrap = document.getElementById('inv-table-wrap');
+  const arrow = document.getElementById('inv-arrow');
+  if (wrap) wrap.style.display = invOpen ? '' : 'none';
+  if (arrow) arrow.textContent = invOpen ? '▾' : '▸';
+}
+
+function renderInventory() {
+  const inb = DB.inbound || [];
+  const totalIn = inb.reduce((s, r) => s + Number(r[1] || 0), 0);
+  const installed = (DB.chargers || []).length;
+  const stock = totalIn - installed;
+
+  const elTotal = document.getElementById('inv-total');
+  if (!elTotal) return; // 페이지 미로딩 시 안전 처리
+  elTotal.textContent = totalIn + '대';
+  document.getElementById('inv-total-sub').textContent = '입고 ' + inb.length + '건';
+  document.getElementById('inv-installed').textContent = installed + '대';
+  const stockEl = document.getElementById('inv-stock');
+  stockEl.textContent = stock + '대';
+  stockEl.className = 'stat-val ' + (stock < 0 ? 'red' : 'green'); // 음수(입고 누락)면 빨간색 경고
+  document.getElementById('inv-count').textContent = inb.length ? `(${inb.length}건 · 총 ${totalIn}대)` : '';
+
+  // 입고 내역 테이블 (최신순, 삭제용 원본 인덱스 보존)
+  const tbody = document.getElementById('inbound-table');
+  if (!gasHasInbound) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--red)">⚠ 입고 기능을 사용하려면 Apps Script 재배포가 필요합니다.<br>설정 페이지에서 새 코드를 복사해 붙여넣고 <strong>새 버전으로 재배포</strong>해 주세요.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = inb.length
+    ? inb.map((r, i) => ({r, i})).reverse().map(({r, i}) => `
+      <tr><td>${fmtDate(r[0])}</td><td><strong>${Number(r[1]||0)}대</strong></td><td>${r[2]||'-'}</td><td>${r[3]||'-'}</td><td>${r[4]||'-'}</td>
+      <td><button class="btn btn-danger" style="font-size:11px;padding:3px 8px" onclick="confirmDelete('inbound',${i},'${fmtDate(r[0])} 입고 ${Number(r[1]||0)}대')">🗑</button></td></tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">입고 내역이 없습니다 — 오른쪽 위 + 입고 등록 버튼으로 추가하세요</td></tr>';
+}
+
+function submitInbound() {
+  const date = v('in-date'), qty = v('in-qty');
+  if (!date || !qty) { showToast('입고일과 수량은 필수입니다'); return; }
+  if (Number(qty) <= 0) { showToast('수량은 1 이상 입력하세요'); return; }
+  gasPost({action:'addInbound', data:[date, Number(qty), v('in-model'), v('in-supplier'), v('in-memo'), new Date().toLocaleString('ko')]}, () => {
+    closeModal('modal-inbound'); showToast('입고 등록 완료');
+    clearForm(['in-date','in-qty','in-model','in-supplier','in-memo']);
+  });
+}
+
+// ── 아이센서 재고: 입출고 관리 ──
+// 잔여 재고 = 입고 수량 합계 − 출고(설치) 수량 합계. 충전기와 달리 시리얼 없이 수량만 기록하고,
+// 출고는 자동 차감이 아니라 '+ 입출고 등록' 모달에서 수동으로 기록한다.
+let gasHasIsensor = true; // 구버전 GAS는 isensor 키가 없음 → 재배포 안내 플래그
+let isvOpen = false;      // 입출고 내역 펼침 상태
+
+function isvToggle() {
+  isvOpen = !isvOpen;
+  const wrap = document.getElementById('isv-table-wrap');
+  const arrow = document.getElementById('isv-arrow');
+  if (wrap) wrap.style.display = isvOpen ? '' : 'none';
+  if (arrow) arrow.textContent = isvOpen ? '▾' : '▸';
+}
+
+// 구분(입고/출고)에 따라 단지명/모델명 입력란 전환
+function isTypeChanged() {
+  const isOut = document.getElementById('is-type-out').checked;
+  document.getElementById('is-complex-group').style.display = isOut ? '' : 'none';
+  document.getElementById('is-model-group').style.display = isOut ? 'none' : '';
+}
+
+function renderIsensor() {
+  const rows = DB.isensor || [];
+  const inRows = rows.filter(r => r[0] === '입고');
+  const outRows = rows.filter(r => r[0] === '출고');
+  const totalIn = inRows.reduce((s, r) => s + Number(r[2] || 0), 0);
+  const totalOut = outRows.reduce((s, r) => s + Number(r[2] || 0), 0);
+  const stock = totalIn - totalOut;
+
+  const elIn = document.getElementById('isv-in');
+  if (!elIn) return; // 페이지 미로딩 시 안전 처리
+  elIn.textContent = totalIn + '대';
+  document.getElementById('isv-in-sub').textContent = '입고 ' + inRows.length + '건';
+  document.getElementById('isv-out').textContent = totalOut + '대';
+  document.getElementById('isv-out-sub').textContent = '출고 ' + outRows.length + '건';
+  const stockEl = document.getElementById('isv-stock');
+  stockEl.textContent = stock + '대';
+  stockEl.className = 'stat-val ' + (stock < 0 ? 'red' : 'green'); // 음수(입고 누락 등)면 빨간색 경고
+  document.getElementById('isv-count').textContent = rows.length ? `(${rows.length}건 · 재고 ${stock}대)` : '';
+
+  // 입출고 내역 테이블 (최신순, 삭제용 원본 인덱스 보존)
+  const tbody = document.getElementById('isensor-table');
+  if (!gasHasIsensor) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--red)">⚠ 아이센서 재고 기능을 사용하려면 Apps Script 재배포가 필요합니다.<br>설정 페이지에서 새 코드를 복사해 붙여넣고 <strong>새 버전으로 재배포</strong>해 주세요.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.length
+    ? rows.map((r, i) => ({r, i})).reverse().map(({r, i}) => {
+        const badge = r[0] === '출고' ? '<span class="isv-out">📤 출고</span>' : '<span class="isv-in">📥 입고</span>';
+        return `<tr><td>${badge}</td><td>${fmtDate(r[1])}</td><td><strong>${Number(r[2]||0)}대</strong></td><td>${r[3]||'-'}</td><td>${r[4]||'-'}</td><td>${r[5]||'-'}</td>
+      <td><button class="btn btn-danger" style="font-size:11px;padding:3px 8px" onclick="confirmDelete('isensor',${i},'${fmtDate(r[1])} ${r[0]} ${Number(r[2]||0)}대')">🗑</button></td></tr>`;
+      }).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">입출고 내역이 없습니다 — 오른쪽 위 + 입출고 등록 버튼으로 추가하세요</td></tr>';
+}
+
+function submitIsensor() {
+  const isOut = document.getElementById('is-type-out').checked;
+  const type = isOut ? '출고' : '입고';
+  const date = v('is-date'), qty = v('is-qty');
+  if (!date || !qty) { showToast('일자와 수량은 필수입니다'); return; }
+  if (Number(qty) <= 0) { showToast('수량은 1 이상 입력하세요'); return; }
+  const complex = v('is-complex');
+  if (isOut && !complex) { showToast('출고(설치) 시 단지명을 선택하세요'); return; }
+  gasPost({action:'addIsensor', data:[type, date, Number(qty), complex, v('is-model'), v('is-memo'), new Date().toLocaleString('ko')]}, () => {
+    closeModal('modal-isensor'); showToast('아이센서 ' + type + ' 등록 완료');
+    clearForm(['is-date','is-qty','is-complex','is-model','is-memo']);
+    document.getElementById('is-type-in').checked = true;
+    isTypeChanged();
+  });
+}
+
+// ── 충전기 현황: 단지별 그룹 접기/펼치기 ──
+let chFilters = { search:'', status:'' };   // 검색어 · 상태 필터
+let chOpenGroups = new Set();               // 현재 펼쳐진 단지 그룹 이름
+
+function chSetFilter(key, val) { chFilters[key] = val; renderChargers(); }
+
+// 단지 그룹 헤더 클릭 시 펼치기/접기 토글
+function chToggleGroup(name) {
+  if (chOpenGroups.has(name)) chOpenGroups.delete(name);
+  else chOpenGroups.add(name);
+  renderChargers();
+}
+
+// 모두 펼치기 ↔ 모두 접기 토글
+function chToggleAll() {
+  const allNames = new Set((DB.chargers||[]).map(r => r[1] || '미지정'));
+  if (chOpenGroups.size >= allNames.size) chOpenGroups.clear();
+  else chOpenGroups = allNames;
+  renderChargers();
+}
+
+function renderChargers() {
+  const rows = DB.chargers || [];
+  const tbody = document.getElementById('charger-table');
+  const COLS = 8;
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="${COLS}" style="text-align:center;padding:20px;color:var(--muted)">등록된 충전기 없음 (+ 충전기 등록 또는 📋 거점 일괄 등록으로 추가하세요)</td></tr>`; updateChToggleBtn(); return; }
+
+  const asData = DB.as || [];
+  const q = chFilters.search.toLowerCase();
+  const st = chFilters.status;
+  const filtering = !!(q || st); // 필터 사용 중이면 결과 그룹은 자동으로 펼침
+
+  // 필터 적용 (삭제/수정용 원본 인덱스 보존) — 시리얼·단지·위치·거점·QR 검색
+  const filtered = rows.map((r, i) => ({r, i})).filter(({r}) => {
+    if (q && ![0,1,2,5,7].some(k => String(r[k]||'').toLowerCase().includes(q))) return false;
+    if (st && (r[4]||'') !== st) return false;
+    return true;
+  });
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="${COLS}" style="text-align:center;padding:20px;color:var(--muted)">조건에 맞는 충전기가 없습니다</td></tr>`; updateChToggleBtn(); return; }
+
+  // 단지명 기준 그룹핑 (등록 순서 유지)
+  const groups = new Map();
+  filtered.forEach(({r, i}) => {
+    const g = r[1] || '미지정';
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push({r, i});
+  });
+  // 단지 주소 조회 (단지 시트 H열)
+  const addrOf = name => { const c = (DB.complexes||[]).find(x => String(x[0]) === String(name)); return c ? (c[7]||'') : ''; };
+  // 거점 → 충전기번호 순 정렬용 숫자 추출
+  const num = s => { const m = String(s||'').match(/\d+/); return m ? Number(m[0]) : 9999; };
+
+  let html = '';
+  groups.forEach((items, gname) => {
+    const open = filtering || chOpenGroups.has(gname);
+    const safe = gname.replace(/'/g, "\\'");
+    const sites = new Set(items.map(({r}) => String(r[5]||'').trim()).filter(Boolean));
+    const addr = addrOf(gname);
+    // 그룹 헤더 행: 단지명 + 주소 + 거점 수 + 대수, 클릭으로 펼치기/접기
+    html += `<tr class="group-row" onclick="chToggleGroup('${safe}')" style="background:var(--teal-light);cursor:pointer;user-select:none">
+      <td colspan="${COLS}" style="font-weight:600;color:var(--teal-dark);padding:9px 12px">
+        <span style="display:inline-block;width:14px">${open?'▾':'▸'}</span> 🏢 ${gname}
+        <span style="font-weight:400;color:var(--muted);font-size:12px">· ${sites.size?'거점 '+sites.size+'곳 · ':''}충전기 ${items.length}대${addr?' · 📍 '+addr:''}</span>
+      </td>
+    </tr>`;
+    if (!open) return;
+    items.sort((a,b) => (num(a.r[5]) - num(b.r[5])) || String(a.r[5]||'').localeCompare(String(b.r[5]||'')) || (num(a.r[6]) - num(b.r[6])));
+    // 펼쳐진 경우: 해당 단지의 충전기 행 표시
+    html += items.map(({r, i}) => {
+      const lastAS = [...asData].reverse().find(a => String(a[3]) === String(r[0]));
+      const chNo = (r[6]!=='' && r[6]!=null) ? r[6]+'번' : '-';
+      return `
+    <tr onclick="toggleDetail('ch-detail-${i}',this)">
+      <td style="padding-left:26px">${r[5]||'-'}</td><td>${chNo}</td><td>${mono(String(r[0]))}</td><td>${mono(r[7]!=null&&r[7]!==''?String(r[7]):'')}</td><td>${r[2]||'-'}</td>
+      <td>${fmtDate(r[3])}</td><td>${lastAS?fmtDate(lastAS[1]):'-'}</td><td>${badgeHtml(r[4])}</td>
+    </tr>
+    <tr class="detail-row" id="ch-detail-${i}" style="display:none">
+      <td colspan="${COLS}"><div class="detail-inner">
+        <div style="font-size:13px;line-height:1.8">
+          <b>충전소명</b> ${r[1]||'-'} &nbsp;·&nbsp; <b>주소</b> ${addr||'<span style="color:var(--muted)">단지관리에 주소 미입력</span>'}<br>
+          <b>상세위치(거점명)</b> ${r[5]||'-'}${r[2]?' : '+r[2]:''} &nbsp;·&nbsp; <b>${chNo} 충전기</b> 시리얼 ${String(r[0]||'-')} / QR ${r[7]||'-'}
+        </div>
+        <div class="detail-actions">
+          <button class="btn" onclick="event.stopPropagation();openEditCharger(${i})">✏ 수정</button>
+          <button class="btn btn-danger" onclick="confirmDelete('charger',${i},'시리얼 ${String(r[0]||'').replace(/'/g,"\\'")}')">🗑 삭제</button>
+        </div>
+      </div></td>
+    </tr>`;
+    }).join('');
+  });
+  tbody.innerHTML = html;
+  updateChToggleBtn();
+}
+
+// 모두 펼치기/접기 버튼 라벨 갱신
+function updateChToggleBtn() {
+  const btn = document.getElementById('ch-toggle-all-btn');
+  if (!btn) return;
+  const allNames = new Set((DB.chargers||[]).map(r => r[1] || '미지정'));
+  btn.textContent = (allNames.size > 0 && chOpenGroups.size >= allNames.size) ? '⊟ 모두 접기' : '⊞ 모두 펼치기';
+}
+
+// 충전기 CSV 내보내기: 접힌 그룹 포함 전체 데이터를 DB에서 직접 생성
+function exportChargersCSV() {
+  const rows = DB.chargers || [];
+  if (!rows.length) { showToast('내보낼 충전기 데이터가 없습니다'); return; }
+  const asData = DB.as || [];
+  let csv = '단지명,주소,거점,충전기번호,시리얼번호,QR충전기번호,상세위치,설치일,최근A/S,상태\n';
+  rows.forEach(r => {
+    const lastAS = [...asData].reverse().find(a => String(a[3]) === String(r[0]));
+    const cx = (DB.complexes||[]).find(x => String(x[0]) === String(r[1]));
+    const cells = [r[1], cx?cx[7]:'', r[5], r[6], r[0], r[7], r[2], fmtDate(r[3]), lastAS?fmtDate(lastAS[1]):'', r[4]];
+    csv += cells.map(c => '"' + String(c==null?'':c).replace(/"/g,'""') + '"').join(',') + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = '알뜰차저_충전기현황_' + new Date().toLocaleDateString('ko') + '.csv';
+  a.click();
+}
+
+function renderAS() {
+  const rows=DB.as||[];
+  const tot=rows.length, nw=rows.filter(r=>r[6]==='미처리').length, wip=rows.filter(r=>r[6]==='처리중').length, done=rows.filter(r=>r[6]==='완료').length;
+  document.getElementById('as-total').textContent=tot;
+  document.getElementById('as-new').textContent=nw;
+  document.getElementById('as-wip').textContent=wip;
+  document.getElementById('as-done').textContent=done;
+  if(!rows.length){ document.getElementById('as-table').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">접수된 A/S 없음</td></tr>'; return; }
+  document.getElementById('as-table').innerHTML=[...rows].reverse().map((r,i)=>{
+    const history=String(r[7]||'').split('|').filter(Boolean);
+    const tlHtml=history.map(h=>{
+      const [ts,type,memo]=h.split('::');
+      const dotCls=type==='접수'?'blue':type==='방문'?'amber':type==='완료'?'green':'gray';
+      return `<div class="tl-item"><div class="tl-dot tl-dot-${dotCls}"></div><div><div class="tl-head">${type||''}</div><div class="tl-meta">${ts||''} · ${memo||''}</div></div></div>`;
+    }).join('');
+    const origIdx=rows.length-1-i;
+    return `
+    <tr onclick="toggleDetail('as-detail-${i}',this)">
+      <td class="mono">${r[0]||'-'}</td><td>${fmtDate(r[1])}</td>
+      <td>${r[2]||'-'}</td><td>${mono(String(r[3]||''))}</td>
+      <td>${r[4]||'-'}</td><td>${r[5]||'-'}</td><td>${badgeHtml(r[6])}</td>
+    </tr>
+    <tr class="detail-row" id="as-detail-${i}" style="display:none">
+      <td colspan="7"><div class="detail-inner">
+        <div style="margin-bottom:8px;font-size:13px"><strong>상세:</strong> ${r[8]||'-'}</div>
+        <div class="detail-title" style="margin-bottom:6px">처리 이력</div>
+        <div class="timeline">${tlHtml||'<div style="font-size:13px;color:var(--muted)">이력 없음</div>'}</div>
+        <div class="detail-actions">
+          ${r[6]!=='완료'?`<button class="btn" style="font-size:12px" onclick="updateAS('${r[0]}','처리중')">처리중으로 변경</button>
+          <button class="btn btn-primary" style="font-size:12px" onclick="updateAS('${r[0]}','완료')">완료 처리</button>`:''}
+          <button class="btn btn-danger" style="font-size:12px;margin-left:auto" onclick="confirmDelete('as',${origIdx},'접수번호 ${String(r[0]||'').replace(/'/g,"\\'")}')">🗑 삭제</button>
+        </div>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function initSalesFilters() {
+  const now = new Date();
+  const yearSel = document.getElementById('sales-year-filter');
+  const monSel = document.getElementById('sales-month-filter');
+  if(!yearSel || yearSel.options.length > 1) return;
+  for(let y = now.getFullYear(); y >= 2024; y--) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y+'년';
+    if(y === now.getFullYear()) o.selected = true;
+    yearSel.appendChild(o);
+  }
+  for(let m = 1; m <= 12; m++) {
+    const o = document.createElement('option');
+    o.value = String(m).padStart(2,'0');
+    o.textContent = m+'월';
+    if(m === now.getMonth()+1) o.selected = true;
+    monSel.appendChild(o);
+  }
+}
+
+function renderContracts() {
+  initSalesFilters();
+  const rows = DB.sales || [];
+  const yearSel = document.getElementById('sales-year-filter');
+  const monSel  = document.getElementById('sales-month-filter');
+  const selYear = yearSel ? yearSel.value : String(new Date().getFullYear());
+  const selMon  = monSel  ? monSel.value  : String(new Date().getMonth()+1).padStart(2,'0');
+  const selYM   = selYear + '-' + selMon;
+
+  const thisMonth = rows.filter(r => toYM(r[1]) === selYM);
+  const monthTotal = thisMonth.reduce((s,r) => s+Number(r[2]||0), 0);
+  const yearTotal = rows.filter(r => String(r[1]).startsWith(selYear)).reduce((s,r) => s+Number(r[2]||0), 0);
+  const complexSet = new Set(thisMonth.map(r=>r[0]));
+  const avg = complexSet.size ? Math.round(monthTotal/complexSet.size) : 0;
+
+  document.getElementById('c-monthly').textContent = monthTotal.toLocaleString();
+  document.getElementById('c-yearly').textContent  = yearTotal.toLocaleString();
+  document.getElementById('c-total').textContent   = complexSet.size;
+  document.getElementById('c-avg').textContent     = avg.toLocaleString();
+
+  // 선택 월 테이블
+  const filtered = [...rows].filter(r => toYM(r[1]) === selYM);
+  if(!filtered.length) {
+    document.getElementById('sales-table').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">'+selYear+'년 '+Number(selMon)+'월 매출 데이터 없음</td></tr>';
+  } else {
+    document.getElementById('sales-table').innerHTML = filtered.map((r) => {
+      const origIdx = rows.indexOf(r);
+      return `<tr>
+        <td><strong style="font-weight:500">${r[0]||'-'}</strong></td>
+        <td>${toYM(r[1])||'-'}</td>
+        <td style="font-weight:600">${Number(r[2]||0).toLocaleString()}</td>
+        <td>${r[3]?Number(r[3]).toLocaleString()+' kWh':'-'}</td>
+        <td style="color:var(--muted);font-size:13px">${String(r[6]||'').toUpperCase()==='Y'?'<span class="badge badge-amber" style="margin-right:4px">프로모션</span>':''}${r[4]||'-'}</td>
+        <td style="font-size:12px;color:var(--muted)">${fmtDate(r[5]||r[1])}</td>
+        <td style="white-space:nowrap">
+          <button class="btn" style="font-size:11px;padding:3px 8px" onclick="openEditSales(${origIdx})">✏️</button>
+          <button class="btn btn-danger" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="confirmDelete('sales',${origIdx},'${String(r[0]||'')} 매출')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // 단지별 누적 카드
+  const byComplex = {};
+  rows.forEach(r => {
+    const name = r[0]||''; if(!name) return;
+    if(!byComplex[name]) byComplex[name] = {total:0, months:new Set()};
+    byComplex[name].total += Number(r[2]||0);
+    byComplex[name].months.add(toYM(r[1]));
+  });
+  const cards = Object.entries(byComplex).sort((a,b)=>b[1].total-a[1].total).map(([name,d])=>{
+    const avg2 = d.months.size ? Math.round(d.total/d.months.size) : 0;
+    const safeName = String(name).replace(/'/g,"\\'");
+    return `<div class="stat-card" style="padding:14px 16px;position:relative">
+      <button class="btn btn-danger" title="이 단지의 매출 데이터 전체 삭제" style="position:absolute;top:10px;right:10px;font-size:11px;padding:2px 7px" onclick="confirmDeleteComplexSales('${safeName}')">🗑</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;padding-right:22px">${name}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">누적 매출</div>
+      <div style="font-size:20px;font-weight:700;color:var(--teal)">${d.total.toLocaleString()}<span style="font-size:12px;font-weight:400">원</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">월평균 ${avg2.toLocaleString()}원 · ${d.months.size}개월</div>
+    </div>`;
+  }).join('');
+  document.getElementById('sales-summary-cards').innerHTML = cards || '<div style="color:var(--muted);font-size:13px">매출 데이터 없음</div>';
+}
+
+function filterSales(q) {
+  document.querySelectorAll('#sales-table tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+// 폼 제출
+function submitComplex() {
+  const name=v('c-name'),count=v('c-count');
+  if(!name||!count){ showToast('필수 항목을 입력하세요'); return; }
+  const date=v('c-date');
+  const isensor=document.getElementById('c-isensor-yes').checked ? '알뜰차저 i-Sensor' : '미설치';
+  // r[15]=개통일 (계약기간 7년 산정 기준일)
+  gasPost({action:'addComplex',data:[name,v('c-region'),date,count,v('c-contact'),v('c-manager'),v('c-status'),v('c-address'),v('c-serials'),v('c-expire'),isensor,v('c-contract-date'),v('c-contractor'),v('c-biztype'),v('c-memo'),v('c-activation-date')]},()=>{
+    closeModal('modal-complex'); showToast('단지 등록 완료');
+    clearForm(['c-name','c-region','c-date','c-count','c-contact','c-manager','c-address','c-serials','c-expire','c-contract-date','c-contractor','c-memo','c-activation-date']); document.getElementById('c-isensor-yes').checked=true;
+  });
+}
+// 충전기 시트 컬럼: A 시리얼번호 · B 단지명 · C 상세위치 · D 설치일 · E 상태 · F 거점 · G 충전기번호 · H QR충전기번호
+function submitCharger() {
+  const serial=v('ch-serial'),complex=v('ch-complex');
+  if(!serial||!complex){ showToast('시리얼 번호와 단지명은 필수입니다'); return; }
+  const editIdx=v('ch-edit-idx');
+  // 시리얼 중복 확인 (수정 중인 자기 자신은 제외)
+  const dup=(DB.chargers||[]).findIndex((r,i)=>String(r[0]).trim()===serial && String(i)!==editIdx);
+  if(dup>=0){ showToast('이미 등록된 시리얼 번호입니다: '+serial); return; }
+  const data=[serial,complex,v('ch-location'),v('ch-date'),v('ch-status'),v('ch-site'),v('ch-no'),v('ch-qr')];
+  const done=()=>{
+    closeModal('modal-charger'); showToast(editIdx!==''?'충전기 수정 완료':'충전기 등록 완료');
+    clearForm(['ch-edit-idx','ch-serial','ch-qr','ch-complex','ch-site','ch-no','ch-location','ch-date']);
+  };
+  if(editIdx!=='') gasPost({action:'updateRow',sheet:'charger',index:Number(editIdx),data:data},done);
+  else gasPost({action:'addCharger',data:data},done);
+}
+// 신규 등록 모달 열기
+function openChargerAdd() {
+  clearForm(['ch-edit-idx','ch-serial','ch-qr','ch-site','ch-no','ch-location','ch-date']);
+  document.getElementById('ch-status').value='정상';
+  document.getElementById('ch-modal-title').textContent='충전기 등록';
+  document.getElementById('ch-submit-btn').textContent='등록';
+  openModal('modal-charger');
+}
+// 수정 모달 열기 (기존 값 채우기)
+function openEditCharger(idx) {
+  const r=(DB.chargers||[])[idx]; if(!r) return;
+  openModal('modal-charger');
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=(val==null?'':String(val)); };
+  set('ch-edit-idx',idx); set('ch-serial',r[0]); set('ch-complex',r[1]); set('ch-location',r[2]);
+  set('ch-date',toDateInput(r[3])); set('ch-status',r[4]||'정상'); set('ch-site',r[5]); set('ch-no',r[6]); set('ch-qr',r[7]);
+  // 단지 목록에 없는 단지명이면 선택지로 임시 추가
+  const sel=document.getElementById('ch-complex');
+  if(r[1] && sel.value!==String(r[1])){ sel.insertAdjacentHTML('beforeend',`<option>${escHtml(r[1])}</option>`); sel.value=String(r[1]); }
+  document.getElementById('ch-modal-title').textContent='충전기 수정';
+  document.getElementById('ch-submit-btn').textContent='저장';
+}
+
+// ── 거점 일괄 등록 ──
+function openChargerBulk() {
+  clearForm(['chb-site','chb-location','chb-date','chb-paste']);
+  document.getElementById('chb-status').value='정상';
+  document.getElementById('chb-rows').innerHTML='';
+  chbAddRow(); chbAddRow();
+  openModal('modal-charger-bulk');
+}
+// 입력 행 추가 (번호는 자동으로 다음 번호)
+function chbAddRow(serial, qr) {
+  const tb=document.getElementById('chb-rows');
+  const no=tb.querySelectorAll('tr').length+1;
+  tb.insertAdjacentHTML('beforeend',`<tr>
+    <td><input type="number" class="chb-no" min="1" value="${no}" style="width:56px;padding:6px;border:1px solid var(--border);border-radius:var(--radius)"></td>
+    <td><input type="text" class="chb-serial mono" value="${escAttr(serial||'')}" placeholder="E-D-001881" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius)"></td>
+    <td><input type="text" class="chb-qr mono" value="${escAttr(qr||'')}" placeholder="307724" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius)"></td>
+    <td><button class="btn" style="padding:4px 8px" onclick="this.closest('tr').remove()">✕</button></td>
+  </tr>`);
+}
+// 엑셀 붙여넣기 해석: 시리얼(영문-영문-숫자 형태) 다음에 나오는 4~8자리 숫자를 QR번호로 인식
+function chbApplyPaste() {
+  const text=document.getElementById('chb-paste').value||'';
+  const tokens=text.split(/[\s,]+/).filter(Boolean);
+  const list=[]; let cur=null;
+  tokens.forEach(t=>{
+    if(/^[A-Za-z]{1,4}(-[A-Za-z0-9]+)*-\d{3,}$/.test(t)) { cur={serial:t,qr:''}; list.push(cur); }
+    else if(/^\d{4,8}$/.test(t) && cur && !cur.qr) { cur.qr=t; }
+  });
+  if(!list.length){ showToast('시리얼 번호를 찾지 못했습니다 (예: E-D-001881)'); return; }
+  const tb=document.getElementById('chb-rows');
+  // 비어 있는 행은 지우고 붙여넣은 내용으로 채움
+  tb.querySelectorAll('tr').forEach(tr=>{ if(!tr.querySelector('.chb-serial').value.trim()) tr.remove(); });
+  list.forEach(x=>chbAddRow(x.serial,x.qr));
+  showToast(list.length+'대 인식됨 — 번호·값을 확인 후 등록하세요');
+}
+// 일괄 등록 실행: 행마다 addCharger를 순서대로 전송 (GAS 재배포 불필요)
+function submitChargerBulk() {
+  const complex=v('chb-complex'), site=v('chb-site');
+  if(!complex||!site){ showToast('단지명과 거점은 필수입니다'); return; }
+  const rows=[...document.querySelectorAll('#chb-rows tr')].map(tr=>({
+    no:tr.querySelector('.chb-no').value.trim(),
+    serial:tr.querySelector('.chb-serial').value.trim(),
+    qr:tr.querySelector('.chb-qr').value.trim()
+  })).filter(x=>x.serial);
+  if(!rows.length){ showToast('시리얼 번호를 1개 이상 입력하세요'); return; }
+  // 중복 확인: 입력 목록 내부 + 기존 등록분
+  const seen=new Set(), existing=new Set((DB.chargers||[]).map(r=>String(r[0]).trim()));
+  for(const x of rows){
+    if(seen.has(x.serial)){ showToast('입력 목록에 중복된 시리얼: '+x.serial); return; }
+    if(existing.has(x.serial)){ showToast('이미 등록된 시리얼: '+x.serial); return; }
+    seen.add(x.serial);
+  }
+  if(!GAS_URL){ showToast('먼저 설정에서 URL을 입력하세요'); return; }
+  const loc=v('chb-location'), date=v('chb-date'), status=v('chb-status');
+  const btn=document.getElementById('chb-submit-btn'); btn.disabled=true;
+  (async()=>{
+    let ok=0, fail=[];
+    for(let k=0;k<rows.length;k++){
+      const x=rows[k];
+      btn.textContent=`등록 중... (${k+1}/${rows.length})`;
+      try{
+        const d=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'addCharger',data:[x.serial,complex,loc,date,status,site,x.no,x.qr]})}).then(r=>r.json());
+        if(d.ok) ok++; else fail.push(x.serial);
+      }catch(e){ fail.push(x.serial); }
+    }
+    btn.disabled=false; btn.textContent='일괄 등록';
+    if(fail.length) showToast(`${ok}대 등록, ${fail.length}대 실패: `+fail.join(', '));
+    else { showToast(`${complex} ${site} — ${ok}대 등록 완료`); closeModal('modal-charger-bulk'); }
+    chOpenGroups.add(complex);
+    syncAll();
+  })();
+}
+function submitAS() {
+  const complex=v('as-complex'),serial=v('as-serial'),symptom=v('as-symptom');
+  if(!complex||!serial||!symptom){ showToast('필수 항목을 입력하세요'); return; }
+  const num='#AS-'+new Date().toISOString().substring(2,10).replace(/-/g,'')+'-'+String(Math.floor(Math.random()*900)+100);
+  const ts=new Date().toLocaleString('ko');
+  const history=`${ts}::접수::${symptom} / ${v('as-channel')}`;
+  gasPost({action:'addAS',data:[num,new Date().toISOString().substring(0,10),complex,serial,symptom,v('as-manager'),'미처리',history,v('as-detail'),v('as-channel')]},()=>{
+    closeModal('modal-as'); showToast('A/S 접수 완료 '+num); clearForm(['as-complex','as-serial','as-symptom','as-detail','as-manager']);
+  });
+}
+function submitSales() {
+  const complex = v('sl-complex'), year = v('sl-year'), month = v('sl-month'), amount = v('sl-amount');
+  if(!complex||!year||!month||!amount){ showToast('단지명, 연도, 월, 매출액은 필수입니다'); return; }
+  const ym = year + '-' + month;
+  const now = new Date().toISOString().substring(0,10);
+  gasPost({action:'addSales', data:[complex, ym, Number(amount), v('sl-kwh')||'', v('sl-note'), now, document.getElementById('sl-promo').checked?'Y':'']}, ()=>{
+    closeModal('modal-sales');
+    showToast('매출 입력 완료');
+    clearForm(['sl-year','sl-amount','sl-kwh','sl-note']); document.getElementById('sl-promo').checked = false;
+  });
+}
+
+function openEditSales(idx) {
+  const r = (DB.sales||[])[idx];
+  if(!r) return;
+  document.getElementById('sl-edit-idx').value = idx;
+  document.getElementById('sl-edit-complex').value = r[0]||'';
+  document.getElementById('sl-edit-ym').value = toYM(r[1]);
+  document.getElementById('sl-edit-amount').value = r[2]||'';
+  document.getElementById('sl-edit-kwh').value = r[3]||'';
+  document.getElementById('sl-edit-note').value = r[4]||'';
+  document.getElementById('sl-edit-promo').checked = String(r[6]||'').toUpperCase()==='Y';
+  openModal('modal-sales-edit');
+}
+
+function submitSalesEdit() {
+  const idx = parseInt(document.getElementById('sl-edit-idx').value);
+  const amount = document.getElementById('sl-edit-amount').value;
+  if(!amount){ showToast('매출액을 입력하세요'); return; }
+  const r = (DB.sales||[])[idx];
+  if(!r) return;
+  const data = [r[0], r[1], Number(amount), document.getElementById('sl-edit-kwh').value||'', document.getElementById('sl-edit-note').value||'', r[5]||'', document.getElementById('sl-edit-promo').checked?'Y':''];
+  gasPost({action:'updateRow', sheet:'sales', index:idx, data:data}, ()=>{
+    closeModal('modal-sales-edit'); showToast('수정 완료');
+  });
+}
+
+function exportSalesCSV() {
+  const rows = DB.sales||[];
+  if(!rows.length){ showToast('데이터 없음'); return; }
+  let csv = '단지명,연월,매출액,충전량(kWh),비고,등록일,프로모션\n';
+  rows.forEach(r => {
+    const row = [r[0], toYM(r[1]), r[2], r[3], r[4], fmtDate(r[5]||r[1]), r[6]||''];
+    csv += row.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',') + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = '알뜰차저_매출실적_' + new Date().toLocaleDateString('ko') + '.csv';
+  a.click();
+}
+
+function submitContract() { submitSales(); }
+function updateAS(num,status) {
+  const memo=status==='완료'?prompt('완료 메모 입력:','정상 처리 완료'):prompt('처리중 메모:','담당자 배정');
+  if(memo===null) return;
+  const ts=new Date().toLocaleString('ko');
+  gasPost({action:'updateAS',num,status,historyEntry:`${ts}::${status==='완료'?'완료':'방문'}::${memo}`},()=>showToast('상태 업데이트 완료'));
+}
+
+
+// 단지 수정
+function openEditComplex(idx) {
+  const r = DB.complexes[idx];
+  if(!r) return;
+  document.getElementById('edit-idx').value = idx;
+  document.getElementById('edit-name').value = r[0]||'';
+  document.getElementById('edit-region').value = r[1]||'';
+  document.getElementById('edit-date').value = toDateInput(r[2]);
+  document.getElementById('edit-count').value = r[3]||'';
+  document.getElementById('edit-contact').value = r[4]||'';
+  document.getElementById('edit-manager').value = r[5]||'';
+  const statusEl = document.getElementById('edit-status');
+  statusEl.value = r[6]||'운영중';
+  if(!statusEl.value) statusEl.value = '운영중';
+  document.getElementById('edit-address').value = r[7]||'';
+  document.getElementById('edit-serials').value = String(r[8]||'');
+  document.getElementById('edit-expire').value = toDateInput(r[9]);
+  const isensorVal = normalizeIsensor(r[10]);
+  document.getElementById('edit-isensor-yes').checked = (isensorVal !== '미설치');
+  document.getElementById('edit-isensor-no').checked = (isensorVal === '미설치');
+  document.getElementById('edit-contract-date').value = toDateInput(r[11]);
+  document.getElementById('edit-contractor').value = r[12]||'';
+  const biztypeEl = document.getElementById('edit-biztype');
+  if(biztypeEl) biztypeEl.value = normBiz(r[13]);
+  document.getElementById('edit-memo').value = r[14]||''; // 비고
+  document.getElementById('edit-activation-date').value = toDateInput(r[15]); // 개통일
+  openModal('modal-complex-edit');
+}
+function submitEditComplex() {
+  const idx = parseInt(document.getElementById('edit-idx').value);
+  const name = v('edit-name'), count = v('edit-count');
+  if(!name||!count){ showToast('필수 항목을 입력하세요'); return; }
+  const isensor = document.getElementById('edit-isensor-yes').checked ? '알뜰차저 i-Sensor' : '미설치';
+  // r[15]=개통일 (계약기간 7년 산정 기준일)
+  const data = [name,v('edit-region'),v('edit-date'),count,v('edit-contact'),v('edit-manager'),v('edit-status'),v('edit-address'),v('edit-serials'),v('edit-expire'),isensor,v('edit-contract-date'),v('edit-contractor'),v('edit-biztype'),v('edit-memo'),v('edit-activation-date')];
+  gasPost({action:'updateRow', sheet:'complex', index:idx, data:data}, function(){ closeModal('modal-complex-edit'); showToast('수정 완료'); });
+}
+
+// 삭제
+let _deleteTarget=null;
+function confirmDelete(type, idx, label) {
+  _deleteTarget={type,idx,label};
+  document.getElementById('confirm-msg').innerHTML=`<strong>${label}</strong>을(를) 삭제하시겠습니까?<br><span style="color:var(--red)">삭제된 데이터는 복구할 수 없습니다.</span>`;
+  document.getElementById('confirm-dialog').classList.add('open');
+  document.getElementById('confirm-ok-btn').onclick=executeDelete;
+}
+function closeConfirm(){ document.getElementById('confirm-dialog').classList.remove('open'); _deleteTarget=null; }
+function executeDelete() {
+  if(!_deleteTarget) return;
+  const {type,idx}=_deleteTarget;
+  gasPost({action:'deleteRow',sheet:type,index:idx},()=>{ showToast('삭제 완료'); closeConfirm(); });
+}
+
+// 단지별 누적 실적 카드의 매출 데이터 일괄 삭제 (테스트 단지 정리용)
+function confirmDeleteComplexSales(name) {
+  const rows = DB.sales || [];
+  const indices = rows.map((r,i)=>({r,i})).filter(({r})=>String(r[0]||'')===name).map(({i})=>i);
+  if(!indices.length){ showToast('삭제할 매출 데이터가 없습니다'); return; }
+  _deleteTarget = {type:'complex-sales', idx:indices, label:name};
+  document.getElementById('confirm-msg').innerHTML=`<strong>${name}</strong>의 매출 데이터 ${indices.length}건을 모두 삭제하시겠습니까?<br><span style="color:var(--red)">삭제된 데이터는 복구할 수 없습니다.</span>`;
+  document.getElementById('confirm-dialog').classList.add('open');
+  document.getElementById('confirm-ok-btn').onclick=executeDeleteComplexSales;
+}
+function executeDeleteComplexSales() {
+  if(!_deleteTarget || _deleteTarget.type !== 'complex-sales') return;
+  const indices = [..._deleteTarget.idx].sort((a,b)=>b-a); // 인덱스가 밀리지 않도록 큰 값부터 삭제
+  closeConfirm();
+  setSyncStatus('삭제 중...');
+  (async () => {
+    for(const idx of indices) {
+      try {
+        await fetch(GAS_URL, {method:'POST', body:JSON.stringify({action:'deleteRow', sheet:'sales', index:idx})}).then(r=>r.json());
+      } catch(e) { /* 개별 실패는 무시하고 계속 진행 */ }
+    }
+    showToast(indices.length+'건 삭제 완료');
+    syncAll();
+  })();
+}
+
+// UI 유틸
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const map={setup:-1,dashboard:0,complexes:1,chargers:2,as:3,contracts:4,rent:5,schedule:6};
+  const tabs=document.querySelectorAll('.sidebar .nav-tab');
+  if(map[id]>=0&&tabs[map[id]]) { document.querySelectorAll('.sidebar .nav-tab').forEach(t=>t.classList.remove('active')); tabs[map[id]].classList.add('active'); }
+}
+function toggleDetail(id,row) {
+  const el=document.getElementById(id); if(!el) return;
+  const showing=el.style.display!=='none';
+  // 같은 테이블 안의 다른 상세 행 모두 닫기
+  const tbody=el.closest('tbody');
+  if(tbody){
+    tbody.querySelectorAll('.detail-row').forEach(dr=>{
+      if(dr!==el){ dr.style.display='none'; }
+    });
+    tbody.querySelectorAll('tr:not(.detail-row)').forEach(tr=>{
+      if(tr!==row) tr.classList.remove('expanded');
+    });
+  }
+  el.style.display=showing?'none':'table-row';
+  if(row) row.classList.toggle('expanded',!showing);
+}
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  // 단지명 드롭다운 자동 채우기
+  const complexNames=(DB.complexes||[]).map(r=>r[0]).filter(Boolean);
+  ['ch-complex','chb-complex','as-complex','sl-complex','is-complex','rc-complex'].forEach(selId=>{
+    const sel=document.getElementById(selId);
+    if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">단지 선택...</option>'+complexNames.map(n=>`<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+  });
+  // 입고 등록 모달: 입고일 기본값을 오늘 날짜로 설정 (로컬 기준)
+  if(id==='modal-inbound'){
+    const inDate=document.getElementById('in-date');
+    if(inDate && !inDate.value){
+      const n=new Date();
+      inDate.value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+    }
+  }
+  // 아이센서 입출고 등록 모달: 일자 기본값을 오늘 날짜로 설정하고, 구분(입고/출고)에 맞춰 입력란 전환
+  if(id==='modal-isensor'){
+    const isDate=document.getElementById('is-date');
+    if(isDate && !isDate.value){
+      const n=new Date();
+      isDate.value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+    }
+    isTypeChanged();
+  }
+  // 매출 입력 모달: 연도/월 자동 설정
+  if(id==='modal-sales'){
+    const now=new Date();
+    const yr=document.getElementById('sl-year');
+    const mn=document.getElementById('sl-month');
+    if(yr&&!yr.value) yr.value=now.getFullYear();
+    if(mn) mn.value=String(now.getMonth()+1).padStart(2,'0');
+  }
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModalBg(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(id); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function v(id){ return document.getElementById(id)?.value?.trim()||''; }
+// 개통일 입력 시 계약만료일(개통일+7년)을 자동 계산해 채워줌 (수동으로 다시 수정 가능)
+function autoFillExpire(prefix) {
+  const actEl = document.getElementById(prefix+'-activation-date');
+  const expEl = document.getElementById(prefix+'-expire');
+  if(!actEl || !expEl || !actEl.value) return;
+  const d = new Date(actEl.value);
+  d.setFullYear(d.getFullYear() + 7);
+  expEl.value = d.toISOString().substring(0,10);
+}
+function clearForm(ids){ ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+function filterTable(tbodyId,q){ document.querySelectorAll('#'+tbodyId+' tr:not(.detail-row)').forEach(r=>{ r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; }); }
+function filterByStatus(tbodyId,val,colIdx){ document.querySelectorAll('#'+tbodyId+' tr:not(.detail-row)').forEach(r=>{ const cells=r.querySelectorAll('td'); r.style.display=(!val||cells[colIdx]?.textContent.includes(val))?'':'none'; }); }
+function exportTable(tbodyId) {
+  const rows=document.querySelectorAll('#'+tbodyId+' tr:not(.detail-row)');
+  let csv=''; rows.forEach(r=>{ csv+=Array.from(r.querySelectorAll('td')).map(c=>'"'+c.textContent.trim().replace(/"/g,'""')+'"').join(',')+'\n'; });
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='알뜰차저_'+tbodyId+'_'+new Date().toLocaleDateString('ko')+'.csv'; a.click();
+}
+
+/* ===================== 일정 관리 (월별 달력) ===================== */
+// 달력 표시 연/월 상태 (오늘 기준 초기화)
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0~11
+
+// 날짜값 정규화: GAS가 반환하는 ISO 문자열/일반 문자열 → 'YYYY-MM-DD' 키로 통일
+function dateKey(d) {
+  if(!d) return '';
+  const s = String(d);
+  if(s.includes('T')) {
+    // 타임존 보정 (KST)
+    const kst = new Date(new Date(s).getTime() + 9*60*60*1000);
+    return kst.toISOString().substring(0,10);
+  }
+  return s.substring(0,10).replace(/\./g,'-').replace(/\//g,'-');
+}
+
+// 이전/다음 달 이동
+function calMove(delta) {
+  calMonth += delta;
+  if(calMonth < 0){ calMonth = 11; calYear--; }
+  if(calMonth > 11){ calMonth = 0; calYear++; }
+  renderCalendar();
+}
+// 오늘로 이동
+function calToday() {
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  renderCalendar();
+}
+
+// 월별 달력 그리기
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  if(!grid) return;
+  const titleEl = document.getElementById('cal-title');
+  if(titleEl) titleEl.textContent = calYear + '년 ' + (calMonth+1) + '월';
+
+  // 일정 데이터를 날짜별로 그룹화 (원본 인덱스 보존 → 수정/삭제용)
+  const byDate = {};
+  (DB.schedules||[]).forEach((r, i) => {
+    const k = dateKey(r[0]);
+    if(!k) return;
+    if(!byDate[k]) byDate[k] = [];
+    byDate[k].push({idx:i, who:r[1]||'', text:r[2]||'', memo:r[3]||''});
+  });
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=일
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  const todayKey = dateKey(new Date().toISOString());
+
+  // 요일 헤더
+  const dows = ['일','월','화','수','목','금','토'];
+  let h = dows.map((d,i)=>`<div class="cal-dow${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
+
+  // 총 셀 수 (해당 월을 채우는 주 단위)
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for(let c=0; c<totalCells; c++) {
+    const dayNum = c - firstDay + 1;
+    const dow = c % 7;
+    let cellDate, other=false, dispDay;
+    if(dayNum < 1) { // 이전 달
+      other = true; dispDay = prevDays + dayNum;
+      const pm = calMonth===0 ? {y:calYear-1,m:11} : {y:calYear,m:calMonth-1};
+      cellDate = `${pm.y}-${String(pm.m+1).padStart(2,'0')}-${String(dispDay).padStart(2,'0')}`;
+    } else if(dayNum > daysInMonth) { // 다음 달
+      other = true; dispDay = dayNum - daysInMonth;
+      const nm = calMonth===11 ? {y:calYear+1,m:0} : {y:calYear,m:calMonth+1};
+      cellDate = `${nm.y}-${String(nm.m+1).padStart(2,'0')}-${String(dispDay).padStart(2,'0')}`;
+    } else {
+      dispDay = dayNum;
+      cellDate = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    }
+    const isToday = !other && cellDate === todayKey;
+    const evs = byDate[cellDate] || [];
+    // 이벤트 칩: [담당자] 내용 형식, 클릭 시 수정 모달 (셀 클릭 이벤트 전파 차단)
+    const evHtml = evs.map(e =>
+      `<span class="cal-ev" onclick="event.stopPropagation();openScheduleModal(null,${e.idx})" title="${escAttr(e.memo)}"><span class="ev-who">[${escHtml(e.who)}]</span> <span class="ev-text">${escHtml(e.text)}</span></span>`
+    ).join('');
+    const cls = ['cal-cell', dow===0?'sun':'', dow===6?'sat':'', other?'other':'', isToday?'today':''].filter(Boolean).join(' ');
+    h += `<div class="${cls}" onclick="openScheduleModal('${cellDate}')"><div class="cal-day">${dispDay}</div>${evHtml}</div>`;
+  }
+  grid.innerHTML = h;
+}
+
+// HTML 이스케이프 (XSS 및 따옴표 깨짐 방지)
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return escHtml(s).replace(/"/g,'&quot;'); }
+
+// 일정 모달 열기: dateStr 지정 시 등록 모드, idx 지정 시 수정 모드
+function openScheduleModal(dateStr, idx) {
+  const isEdit = (idx !== undefined && idx !== null);
+  document.getElementById('sc-modal-title').textContent = isEdit ? '일정 수정' : '일정 등록';
+  document.getElementById('sc-submit-btn').textContent = isEdit ? '수정' : '등록';
+  document.getElementById('sc-delete-btn').style.display = isEdit ? '' : 'none';
+  document.getElementById('sc-edit-idx').value = isEdit ? idx : '';
+  if(isEdit) {
+    const r = DB.schedules[idx] || [];
+    document.getElementById('sc-date').value = dateKey(r[0]);
+    document.getElementById('sc-who').value = r[1]||'';
+    document.getElementById('sc-text').value = r[2]||'';
+    document.getElementById('sc-memo').value = r[3]||'';
+  } else {
+    clearForm(['sc-who','sc-text','sc-memo']);
+    document.getElementById('sc-date').value = dateStr || dateKey(new Date().toISOString());
+  }
+  openModal('modal-schedule');
+}
+
+// 일정 등록/수정 저장
+function submitSchedule() {
+  const date = v('sc-date'), who = v('sc-who'), text = v('sc-text');
+  if(!date || !who || !text) { showToast('날짜, 담당자, 내용은 필수입니다'); return; }
+  const editIdx = v('sc-edit-idx');
+  if(editIdx !== '') {
+    // 수정: 기존 등록일 유지
+    const old = DB.schedules[Number(editIdx)] || [];
+    const data = [date, who, text, v('sc-memo'), old[4] || new Date().toLocaleString('ko')];
+    gasPost({action:'updateRow', sheet:'일정', index:Number(editIdx), data:data}, ()=>{
+      closeModal('modal-schedule'); showToast('일정 수정 완료');
+    });
+  } else {
+    gasPost({action:'addSchedule', data:[date, who, text, v('sc-memo'), new Date().toLocaleString('ko')]}, ()=>{
+      closeModal('modal-schedule'); showToast('일정 등록 완료');
+    });
+  }
+}
+
+// 수정 모달에서 삭제
+function deleteScheduleFromModal() {
+  const editIdx = v('sc-edit-idx');
+  if(editIdx === '') return;
+  if(!confirm('이 일정을 삭제하시겠습니까?')) return;
+  gasPost({action:'deleteRow', sheet:'일정', index:Number(editIdx)}, ()=>{
+    closeModal('modal-schedule'); showToast('일정 삭제 완료');
+  });
+}
+
+/* ===================== 임대료 정산 ===================== */
+// 임대료조건 시트: 0 단지명 · 1 단지코드 · 2 임대료율(%) · 3 산정기준 · 4 월최소임대료 · 5 프로모션매출 · 6 정산주기
+//                 7 수신 · 8 담당자 · 9 전화 · 10 팩스 · 11 이메일 · 12 은행 · 13 계좌번호 · 14 예금주
+//                 15 계약번호 · 16 단지사업자번호 · 17 사용(Y/N) · 18 비고 · 19 수정일
+// 정산대장 시트:   0 정산서번호 · 1 단지명 · 2 정산기간 · 3 충전금액 · 4 지급임대료 · 5 공급가액 · 6 부가세
+//                 7 발행일 · 8 지급예정일 · 9 발송일 · 10 발송방법 · 11 세금계산서수취일 · 12 지급일 · 13 비고 · 14 등록일
+const RENT_COMPANY = {
+  name:'주식회사 알뜰에너지솔루션', bizNo:'601-88-03526', ceo:'최준우',
+  addr:'경기도 남양주시 다산지금로 202, A동 10층 AF10-0037호(다산동, 현대테라타워)',
+  bizType:'전기, 가스, 증기 및 공기조절 공급업', bizItem:'전기 자동차 충전사업',
+  taxEmail:'altteulcharger@altteulcharger.co.kr'
+};
+let gasHasRent = true;
+
+// ── 발신 담당자 (이 PC에 저장) ──
+function rentSender(){ try { return JSON.parse(localStorage.getItem('altteul_rent_sender')||'{}'); } catch(e){ return {}; } }
+function openRentSender(){
+  const s=rentSender();
+  document.getElementById('rs-name').value=s.name||'';
+  document.getElementById('rs-phone').value=s.phone||'';
+  document.getElementById('rs-email').value=s.email||'';
+  openModal('modal-rent-sender');
+}
+function saveRentSender(){
+  localStorage.setItem('altteul_rent_sender', JSON.stringify({name:v('rs-name'), phone:v('rs-phone'), email:v('rs-email')}));
+  closeModal('modal-rent-sender'); showToast('발신 담당자 저장 완료');
+}
+
+// ── 날짜/기간 유틸 ──
+function ymOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function ymAdd(ym, n){ const [y,m]=ym.split('-').map(Number); return ymOf(new Date(y, m-1+n, 1)); }
+function ymList(s, e){ const out=[]; let c=s; while(c<=e && out.length<24){ out.push(c); c=ymAdd(c,1); } return out; }
+function periodLabel(s, e){
+  const [y,m]=s.split('-').map(Number), [y2,m2]=e.split('-').map(Number);
+  if(s===e) return `${y}년 ${String(m).padStart(2,'0')}월`;
+  if(y===y2 && (m-1)%3===0 && m2===m+2) return `${y}년 ${Math.ceil(m/3)}분기`;
+  return `${y}.${String(m).padStart(2,'0')}~${y2}.${String(m2).padStart(2,'0')}`;
+}
+function periodFileLabel(s, e){
+  const [y,m]=s.split('-').map(Number), [y2,m2]=e.split('-').map(Number);
+  if(s===e) return s;
+  if(y===y2 && (m-1)%3===0 && m2===m+2) return `${y}Q${Math.ceil(m/3)}`;
+  return `${s}~${e}`;
+}
+function lastDayOf(ym){ const [y,m]=ym.split('-').map(Number); return ymOf(new Date(y,m-1,1))+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0'); }
+function todayStr(){ const n=new Date(); return ymOf(n)+'-'+String(n.getDate()).padStart(2,'0'); }
+function korDate(s){ if(!s) return ''; const [y,m,d]=String(s).split('-'); return `${y}년 ${m}월 ${d}일`; }
+function won(n){ return Number(n||0).toLocaleString('ko-KR'); }
+
+function rentInitPeriod(){
+  const s=document.getElementById('rent-start'), e=document.getElementById('rent-end');
+  if(!s || s.value) return;
+  const lm=ymAdd(ymOf(new Date()), -1);
+  s.value=lm; e.value=lm;
+}
+function rentQuick(type){
+  const now=new Date(); let s, e;
+  if(type==='month'){ s=e=ymAdd(ymOf(now), -1); }
+  else { const q=Math.floor(now.getMonth()/3); s=ymOf(new Date(now.getFullYear(), q*3-3, 1)); e=ymAdd(s,2); }
+  document.getElementById('rent-start').value=s; document.getElementById('rent-end').value=e;
+  renderRent();
+}
+
+// ── 임대료 계산 (월별 산정 후 합산) ──
+function calcRent(cond, s, e){
+  const name=String(cond[0]);
+  const rate=Number(cond[2]||5)/100, basis=String(cond[3]||'결제총액'), minR=Number(cond[4]||0), pinc=String(cond[5]||'포함');
+  const months=ymList(s,e).map(ym=>{
+    const rows=(DB.sales||[]).filter(r=>String(r[0])===name && toYM(r[1])===ym);
+    const pay=rows.reduce((a,r)=>a+Number(r[2]||0),0);
+    const kwh=rows.reduce((a,r)=>a+Number(r[3]||0),0);
+    const promo=rows.filter(r=>String(r[6]||'').toUpperCase()==='Y').reduce((a,r)=>a+Number(r[2]||0),0);
+    const basePay=pay-(pinc==='제외'?promo:0);
+    const base=basis==='공급가액'?Math.floor(basePay/1.1):basePay;
+    const calc=Math.floor(Math.round(base*rate*100)/100);
+    const rent=Math.max(calc,minR);
+    return {ym,pay,kwh,promo,base,calc,minApplied:minR>0&&calc<minR,rent,hasData:rows.length>0};
+  });
+  const sum=k=>months.reduce((a,m)=>a+m[k],0);
+  const total=sum('rent'), vat=Math.floor(total/11);
+  return {months,pay:sum('pay'),kwh:sum('kwh'),base:sum('base'),total,vat,supply:total-vat,
+          missing:months.filter(m=>!m.hasData).length,rate,basis,minR,pinc};
+}
+function settleNo(cond, s){ return 'ALT-'+s.replace('-','')+'-'+String(cond[1]||'X'); }
+function settleStatus(r){
+  if(!r) return '미발행';
+  if(r[12]) return '지급 완료';
+  if(r[11]) return '지급 대기';
+  if(r[9])  return '세금계산서 대기';
+  return '발송 대기';
+}
+function settleBadge(st){
+  const m={'미발행':'gray','발송 대기':'amber','세금계산서 대기':'blue','지급 대기':'purple','지급 완료':'green'};
+  return `<span class="badge badge-${m[st]||'gray'}">${st}</span>`;
+}
+
+// ── 화면 그리기 ──
+function renderRent(){
+  const tb=document.getElementById('rent-table'); if(!tb) return;
+  rentInitPeriod();
+  const notice=document.getElementById('rent-gas-notice');
+  if(notice) notice.style.display=gasHasRent?'none':'block';
+  const s=v('rent-start'), e=v('rent-end');
+  renderSettleLedger();
+  if(!s||!e||e<s){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">정산 기간을 확인하세요 (종료월이 시작월보다 빠를 수 없습니다)</td></tr>'; return; }
+  const cyc = s===e ? '월' : '분기';
+  const showAll=document.getElementById('rent-show-all')?.checked;
+  document.getElementById('rent-cycle-label').textContent = showAll ? `· ${periodLabel(s,e)} · 전체 단지` : `· ${periodLabel(s,e)} · 정산주기 '${cyc}' 단지`;
+  const list=(DB.rentConds||[]).map((r,i)=>({r,i})).filter(({r})=> showAll || (String(r[17]||'Y')!=='N' && String(r[6]||'분기')===cyc));
+
+  let sumRent=0, notIssued=0;
+  const html=list.map(({r,i})=>{
+    const c=calcRent(r,s,e), no=settleNo(r,s);
+    const st=settleStatus((DB.settles||[]).find(x=>String(x[0])===no));
+    if(String(r[17]||'Y')!=='N'){ sumRent+=c.total; if(st==='미발행') notIssued++; }
+    const cond=`${Number(r[2]||5)}% · ${r[3]||'결제총액'}${Number(r[4]||0)>0?' · 최소 '+won(r[4]):''}${String(r[5])==='제외'?' · 프로모션 제외':''}`;
+    const dataTxt=c.missing ? `<span style="color:var(--red);font-weight:600">⚠ ${c.missing}개월 미입력</span>` : `<span style="color:var(--teal)">✔ ${c.months.length}개월</span>`;
+    const off=String(r[17]||'Y')==='N';
+    return `<tr style="${off?'opacity:.5':''}">
+      <td><strong style="font-weight:600">${escHtml(r[0]||'-')}</strong><div style="font-size:11px;color:var(--muted)">${escHtml(r[1]||'')}${off?' · 사용 안 함':''}</div></td>
+      <td>${escHtml(r[6]||'분기')}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${cond}</td>
+      <td style="text-align:right">${won(c.pay)}</td>
+      <td style="text-align:right">${won(c.base)}</td>
+      <td style="text-align:right;font-weight:700;color:var(--teal)">${won(c.total)}</td>
+      <td>${dataTxt}</td>
+      <td>${settleBadge(st)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary" style="font-size:12px;padding:4px 10px" onclick="openRentIssue(${i})">📄 정산서</button>
+        <button class="btn" style="font-size:12px;padding:4px 8px" onclick="openRentCond(${i})">⚙</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tb.innerHTML = html || `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">${(DB.rentConds||[]).length?'이 기간·주기에 해당하는 단지가 없습니다 (전체 단지 보기 체크)':'등록된 임대료 조건이 없습니다 — + 임대료 조건 등록으로 추가하세요'}</td></tr>`;
+
+  document.getElementById('rent-s-count').textContent=list.filter(({r})=>String(r[17]||'Y')!=='N').length;
+  document.getElementById('rent-s-total').textContent=won(sumRent);
+  document.getElementById('rent-s-notissued').textContent=notIssued;
+}
+
+function renderSettleLedger(){
+  const tb=document.getElementById('settle-table'); if(!tb) return;
+  const f=document.getElementById('settle-filter')?.value||'';
+  const rows=(DB.settles||[]).map((r,i)=>({r,i})).reverse();
+  const pending=rows.filter(({r})=>settleStatus(r)!=='지급 완료').length;
+  const pEl=document.getElementById('rent-s-pending'); if(pEl) pEl.textContent=pending;
+  const shown=rows.filter(({r})=>!f || settleStatus(r)===f);
+  if(!shown.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">발행 내역 없음</td></tr>'; return; }
+  tb.innerHTML=shown.map(({r,i})=>`<tr>
+    <td class="mono">${escHtml(r[0]||'')}</td>
+    <td>${escHtml(r[1]||'')}</td>
+    <td>${escHtml(r[2]||'')}</td>
+    <td style="text-align:right;font-weight:600">${won(r[4])}</td>
+    <td>${fmtDate(r[7])}</td>
+    <td>${r[9]?fmtDate(r[9]):'-'}${r[10]?'<div style="font-size:11px;color:var(--muted)">'+escHtml(r[10])+'</div>':''}</td>
+    <td>${r[11]?fmtDate(r[11]):'-'}</td>
+    <td>${r[12]?fmtDate(r[12]):'-'}</td>
+    <td>${settleBadge(settleStatus(r))}</td>
+    <td style="white-space:nowrap">
+      <button class="btn" style="font-size:11px;padding:3px 8px" onclick="openSettleEdit(${i})">✏️ 처리</button>
+      <button class="btn btn-danger" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="confirmDelete('settle',${i},'${escAttr(String(r[0]||'')).replace(/'/g,"\\'")} 발행 기록')">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+// ── 임대료 조건 등록/수정 ──
+const RC_FIELDS=['rc-complex','rc-code','rc-rate','rc-basis','rc-min','rc-promo','rc-cycle','rc-recv','rc-manager','rc-phone','rc-fax','rc-email','rc-bank','rc-account','rc-holder','rc-contract','rc-bizno','rc-active','rc-memo'];
+function openRentCond(idx){
+  openModal('modal-rent-cond');
+  const isEdit=(idx!==undefined && idx!==null);
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=(val==null?'':String(val)); };
+  document.getElementById('rc-idx').value=isEdit?idx:'';
+  document.getElementById('rc-title').textContent=isEdit?'임대료 조건 수정':'임대료 조건 등록';
+  document.getElementById('rc-delete-btn').style.display=isEdit?'':'none';
+  if(isEdit){
+    const r=DB.rentConds[idx]||[];
+    const sel=document.getElementById('rc-complex');
+    if(r[0] && ![...sel.options].some(o=>o.value===String(r[0]))) sel.insertAdjacentHTML('beforeend',`<option value="${escAttr(r[0])}">${escHtml(r[0])}</option>`);
+    RC_FIELDS.forEach((id,k)=>{ if(id!=='rc-active'&&id!=='rc-memo') set(id, r[k]); });
+    set('rc-active', r[17]||'Y'); set('rc-memo', r[18]);
+  } else {
+    clearForm(RC_FIELDS);
+    const n=(DB.rentConds||[]).length+1;
+    set('rc-code','A'+String(n).padStart(3,'0')); set('rc-rate',5); set('rc-basis','결제총액'); set('rc-min',0);
+    set('rc-promo','포함'); set('rc-cycle','분기'); set('rc-active','Y'); set('rc-recv','입주자대표회의 회장 귀하');
+  }
+}
+function rcComplexChanged(){
+  if(v('rc-idx')!=='') return;
+  const cx=(DB.complexes||[]).find(c=>String(c[0])===v('rc-complex'));
+  if(cx && !v('rc-phone')) document.getElementById('rc-phone').value=String(cx[4]||'');
+}
+function submitRentCond(){
+  const idx=v('rc-idx'), name=v('rc-complex'), code=v('rc-code');
+  if(!name||!code){ showToast('단지명과 단지코드는 필수입니다'); return; }
+  const others=(DB.rentConds||[]).filter((r,i)=>String(i)!==idx);
+  if(others.some(r=>String(r[0])===name)){ showToast('이미 임대료 조건이 등록된 단지입니다'); return; }
+  if(others.some(r=>String(r[1])===code)){ showToast('이미 사용 중인 단지코드입니다: '+code); return; }
+  const data=RC_FIELDS.filter(id=>id!=='rc-active'&&id!=='rc-memo').map(id=>v(id));
+  data.push(v('rc-active')||'Y', v('rc-memo'), todayStr());
+  const done=()=>{ closeModal('modal-rent-cond'); showToast(idx!==''?'임대료 조건 수정 완료':'임대료 조건 등록 완료'); };
+  if(idx!=='') gasPost({action:'updateRow',sheet:'rent',index:Number(idx),data},done);
+  else gasPost({action:'addRentCond',data},done);
+}
+function deleteRentCond(){
+  const idx=v('rc-idx'); if(idx==='') return;
+  closeModal('modal-rent-cond');
+  confirmDelete('rent', Number(idx), (DB.rentConds[Number(idx)]||[])[0]+' 임대료 조건');
+}
+
+// ── 정산서 발행 ──
+function openRentIssue(idx){
+  const cond=DB.rentConds[idx]; if(!cond) return;
+  const s=v('rent-start'), e=v('rent-end');
+  const c=calcRent(cond,s,e), no=settleNo(cond,s);
+  const old=(DB.settles||[]).find(x=>String(x[0])===no);
+  document.getElementById('ri-idx').value=idx;
+  document.getElementById('ri-issue').value=old?toDateInput(old[7]):todayStr();
+  document.getElementById('ri-due').value=old?toDateInput(old[8]):lastDayOf(ymAdd(e,1));
+  document.getElementById('ri-summary').innerHTML=`
+    <div style="font-size:15px;font-weight:600;margin-bottom:4px">${escHtml(cond[0])}</div>
+    <div style="font-size:12.5px;color:var(--muted)">${periodLabel(s,e)} · 정산서 번호 <span class="mono">${escHtml(no)}</span></div>
+    <div style="font-size:22px;font-weight:700;color:var(--teal);margin-top:10px">${won(c.total)}<span style="font-size:13px;font-weight:400"> 원 (부가세 포함)</span></div>
+    ${c.missing?`<div style="margin-top:10px;padding:8px 10px;background:var(--red-light);color:var(--red);border-radius:6px;font-size:12.5px">⚠ 기간 중 ${c.missing}개월의 매출이 입력되지 않았습니다. 해당 월은 0원(최소임대료가 있으면 최소임대료)으로 계산됩니다.</div>`:''}
+    ${old?`<div style="margin-top:10px;font-size:12.5px;color:var(--muted)">이미 발행된 정산서입니다 (${settleStatus(old)}). 다시 발행하면 금액·발행일만 갱신되고 발송·수취·지급 기록은 유지됩니다.</div>`:''}
+    ${!rentSender().name?`<div style="margin-top:10px;font-size:12.5px;color:var(--amber)">발신 담당자가 비어 있습니다. 상단 👤 발신 담당자에서 입력하면 정산서에 표시됩니다.</div>`:''}`;
+  openModal('modal-rent-issue');
+}
+function rentIssue(record){
+  const cond=DB.rentConds[Number(v('ri-idx'))]; if(!cond) return;
+  const s=v('rent-start'), e=v('rent-end'), issue=v('ri-issue'), due=v('ri-due');
+  if(!issue){ showToast('발행일을 입력하세요'); return; }
+  const c=calcRent(cond,s,e), no=settleNo(cond,s);
+  // 팝업 차단을 피하려면 클릭 직후 바로 창을 열어야 함
+  const w=window.open('','_blank');
+  if(!w){ showToast('팝업이 차단되었습니다. 주소창 오른쪽에서 이 사이트의 팝업을 허용해 주세요'); return; }
+  w.document.open(); w.document.write(buildStatementHtml(cond,s,e,c,no,issue,due)); w.document.close();
+  if(!record){ closeModal('modal-rent-issue'); return; }
+  const oldIdx=(DB.settles||[]).findIndex(x=>String(x[0])===no);
+  const head=[no, String(cond[0]), periodLabel(s,e), c.pay, c.total, c.supply, c.vat, issue, due];
+  const done=()=>{ closeModal('modal-rent-issue'); showToast('발행대장에 기록했습니다'); };
+  if(oldIdx>=0){
+    const o=DB.settles[oldIdx];
+    const data=head.concat([toDateInput(o[9]), o[10]||'', toDateInput(o[11]), toDateInput(o[12]), o[13]||'', toDateInput(o[14])||todayStr()]);
+    gasPost({action:'updateRow',sheet:'settle',index:oldIdx,data},done);
+  } else {
+    gasPost({action:'addSettle',data:head.concat(['','','','','',todayStr()])},done);
+  }
+}
+
+// ── 발행대장 처리 (발송·세금계산서·지급) ──
+function openSettleEdit(idx){
+  const r=(DB.settles||[])[idx]; if(!r) return;
+  document.getElementById('se-idx').value=idx;
+  document.getElementById('se-head').innerHTML=`<b>${escHtml(r[1]||'')}</b> · ${escHtml(r[2]||'')} · <span class="mono">${escHtml(r[0]||'')}</span> · <b style="color:var(--teal)">${won(r[4])}원</b>`;
+  document.getElementById('se-sent').value=toDateInput(r[9]);
+  document.getElementById('se-method').value=r[10]||'이메일';
+  document.getElementById('se-tax').value=toDateInput(r[11]);
+  document.getElementById('se-paid').value=toDateInput(r[12]);
+  document.getElementById('se-memo').value=r[13]||'';
+  openModal('modal-settle-edit');
+}
+function settleToday(id){ document.getElementById(id).value=todayStr(); }
+function submitSettleEdit(){
+  const idx=Number(v('se-idx')); const o=(DB.settles||[])[idx]; if(!o) return;
+  const data=[o[0],o[1],o[2],o[3],o[4],o[5],o[6],toDateInput(o[7]),toDateInput(o[8]),
+              v('se-sent'), v('se-sent')?v('se-method'):'', v('se-tax'), v('se-paid'), v('se-memo'), toDateInput(o[14])];
+  gasPost({action:'updateRow',sheet:'settle',index:idx,data},()=>{ closeModal('modal-settle-edit'); showToast('처리 상태 저장 완료'); });
+}
+
+// ── 정산서 문서 (새 창, A4 1장) ──
+function buildStatementHtml(cond, s, e, c, no, issue, due){
+  const H=x=>escHtml(String(x==null?'':x));
+  const name=String(cond[0]);
+  const cx=(DB.complexes||[]).find(r=>String(r[0])===name)||[];
+  const sender=rentSender();
+  const chargers=(DB.chargers||[]).filter(r=>String(r[1])===name);
+  const title=`${no}_${name}_${periodFileLabel(s,e)}_정산서`;
+  const phoneFax=[cond[9],cond[10]].filter(Boolean).join(' / ');
+  const account=cond[13]?`${cond[12]||''}  ${cond[13]}  (예금주: ${cond[14]||''})`:'';
+  const period=s===e?s.replace('-','.'):`${s.replace('-','.')} ~ ${e.replace('-','.')}`;
+  const ruleTxt=`월 기준금액(${c.basis}${c.basis==='공급가액'?' = 결제총액 ÷ 1.1':''}) × ${(c.rate*100).toFixed(1)}%`
+    + (c.minR>0?`와 월 최소임대료 ${won(c.minR)}원 중 큰 금액`:'')
+    + (c.pinc==='제외'?', 프로모션 매출 제외':'') + ' (원 미만 절사) · 부가세 = 임대료 ÷ 11';
+  const monthRows=c.months.map(m=>`<tr>
+      <td class="c">${m.ym.replace('-','.')}</td><td class="r">${m.kwh?Number(m.kwh).toLocaleString('ko-KR',{maximumFractionDigits:1}):'-'}</td>
+      <td class="r">${won(m.pay)}</td><td class="r">${won(m.base)}</td><td class="r">${won(m.calc)}</td>
+      <td class="c red">${m.minApplied?'적용':''}</td><td class="r b">${won(m.rent)}</td>
+      <td class="c small">${!m.hasData?'매출 미입력':m.promo>0?(c.pinc==='제외'?'프로모션 '+won(m.promo)+'원 제외':'프로모션 포함'):''}</td></tr>`).join('');
+  const chList=chargers.length?chargers.map(r=>`<span class="chip">${H(r[5]||'')}${r[6]?' '+H(r[6])+'번':''} · ${H(r[0])}</span>`).join(''):'';
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>${H(title)}</title>
+<style>
+@page{size:A4;margin:11mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:10.5px;color:#111;background:#e9ecef}
+.bar{position:sticky;top:0;background:#1B3A4B;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px;z-index:5}
+.bar button{padding:7px 16px;border:none;border-radius:6px;background:#2A8C6E;color:#fff;font-size:13px;cursor:pointer;font-family:inherit}
+.bar span{opacity:.8;font-size:12px}
+.paper{width:210mm;min-height:297mm;margin:16px auto;background:#fff;padding:11mm;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+h1{background:#1B3A4B;color:#fff;text-align:center;font-size:17px;padding:8px 0;letter-spacing:1px}
+.period{text-align:right;color:#1B3A4B;font-weight:700;margin:4px 0 6px}
+h2{font-size:11.5px;color:#1B3A4B;margin:9px 0 4px}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #a6a6a6;padding:3px 6px;vertical-align:middle;line-height:1.35}
+th{background:#1B3A4B;color:#fff;font-weight:600;font-size:10px}
+.lbl{background:#f2f2f2;font-weight:700;text-align:center;width:13%}
+.sec{background:#2A8C6E;color:#fff;font-weight:700;text-align:center}
+.c{text-align:center}.r{text-align:right}.b{font-weight:700}.red{color:#c00000;font-weight:700}.small{font-size:9px}
+.sum td{padding:3px 8px}.sum .k{background:#f2f2f2;font-weight:700;width:60%}
+.sum .hl td{background:#2A8C6E;color:#fff;font-size:12.5px}.sum .hl .v{background:#EAF4F0;color:#2A8C6E;font-size:15px;font-weight:700}
+.note{font-size:9px;color:#595959;margin-top:4px}
+.req{background:#EAF4F0;border:1px solid #a6a6a6;padding:5px 9px;line-height:1.5}
+.sub{color:#2A8C6E;font-weight:700;font-size:10px;margin:6px 0 3px}
+.chip{display:inline-block;border:1px solid #ccc;border-radius:4px;padding:1px 6px;margin:2px 3px 0 0;font-size:9px;color:#444}
+.sign{margin-top:12px;text-align:center}
+.sign .t{font-weight:700;font-size:11.5px}.sign .d{margin:3px 0 12px}
+.sign .row{display:flex;justify-content:space-around;font-weight:700;font-size:11px}
+@media print{body{background:#fff}.bar{display:none}.paper{margin:0;box-shadow:none;width:auto;min-height:0;padding:0}}
+</style></head><body>
+<div class="bar"><button onclick="window.print()">🖨 인쇄 / PDF로 저장</button><span>PDF 저장: 인쇄 창의 대상에서 'PDF로 저장' 선택 · 파일명: ${H(title)}</span></div>
+<div class="paper"><div class="inner">
+<h1>전기차 충전기 설치장소 임대료 정산서</h1>
+<div class="period">정산기간 : ${H(period)}</div>
+<table>
+ <tr><td class="sec" colspan="2">수 신</td><td class="sec" colspan="2">발 신</td></tr>
+ <tr><td class="lbl">아파트명</td><td>${H(name)}</td><td class="lbl">상호</td><td>${H(RENT_COMPANY.name)}</td></tr>
+ <tr><td class="lbl">수신</td><td>${H(cond[7]||'입주자대표회의 회장 귀하')}</td><td class="lbl">사업자번호</td><td>${H(RENT_COMPANY.bizNo)}</td></tr>
+ <tr><td class="lbl">주소</td><td>${H(cx[7]||'')}</td><td class="lbl">대표자</td><td>${H(RENT_COMPANY.ceo)}</td></tr>
+ <tr><td class="lbl">담당자</td><td>${H(cond[8]||'')}</td><td class="lbl">담당자</td><td>${H(sender.name||'')}</td></tr>
+ <tr><td class="lbl">전화 / 팩스</td><td>${H(phoneFax)}</td><td class="lbl">연락처</td><td>${H(sender.phone||'')}</td></tr>
+ <tr><td class="lbl">이메일</td><td>${H(cond[11]||'')}</td><td class="lbl">이메일</td><td>${H(sender.email||'')}</td></tr>
+ <tr><td class="lbl">정산서 번호</td><td>${H(no)}</td><td class="lbl">발행일</td><td>${H(korDate(issue))}</td></tr>
+ <tr><td class="lbl">계약번호</td><td>${H(cond[15]||'')}</td><td class="lbl">지급 예정일</td><td>${H(korDate(due))}</td></tr>
+ <tr><td class="lbl">입금 계좌</td><td colspan="3">${H(account)}</td></tr>
+</table>
+
+<h2>1. 정산 요약</h2>
+<table class="sum">
+ <tr><td class="k">총 충전량 (kWh)</td><td class="r">${Number(c.kwh||0).toLocaleString('ko-KR',{maximumFractionDigits:1})}</td></tr>
+ <tr><td class="k">총 충전금액 (이용자 결제총액, 부가세 포함)</td><td class="r">${won(c.pay)}원</td></tr>
+ <tr><td class="k">임대료 산정 기준금액 (${H(c.basis)}${c.pinc==='제외'?', 프로모션 매출 제외':''})</td><td class="r">${won(c.base)}원</td></tr>
+ <tr><td class="k">임대료율 (부가세 포함)</td><td class="r">${(c.rate*100).toFixed(1)}%</td></tr>
+ <tr><td class="k">월 최소임대료</td><td class="r">${c.minR>0?won(c.minR)+'원':'없음'}</td></tr>
+ <tr class="hl"><td class="b">지급 임대료 (합계, 부가세 포함)</td><td class="r v">${won(c.total)}원</td></tr>
+ <tr><td class="k">　└ 공급가액</td><td class="r">${won(c.supply)}원</td></tr>
+ <tr><td class="k">　└ 부가세</td><td class="r">${won(c.vat)}원</td></tr>
+</table>
+<div class="note">※ 임대료는 월별로 산정합니다: ${H(ruleTxt)}</div>
+
+<h2>2. 월별 내역 및 임대료 산정</h2>
+<table>
+ <tr><th>정산월</th><th>충전량(kWh)</th><th>충전금액(원)</th><th>산정 기준금액(원)</th><th>임대료율 적용액(원)</th><th>최소임대료</th><th>지급 임대료(원)</th><th>비고</th></tr>
+ ${monthRows}
+ <tr style="background:#f2f2f2;font-weight:700"><td class="c">합 계</td><td class="r">${Number(c.kwh||0).toLocaleString('ko-KR',{maximumFractionDigits:1})}</td><td class="r">${won(c.pay)}</td><td class="r">${won(c.base)}</td><td class="r">${won(c.months.reduce((a,m)=>a+m.calc,0))}</td><td></td><td class="r">${won(c.total)}</td><td></td></tr>
+</table>
+${chList?`<div class="note" style="margin-top:6px"><b>설치 충전기 ${chargers.length}대</b><br>${chList}</div>`:''}
+
+<h2>3. 세금계산서 발행 요청</h2>
+<div class="req">위 정산 금액에 대한 전자세금계산서를 아래 공급받는자 정보로 발행해 주시기 바랍니다.<br>세금계산서 수취를 확인한 뒤 지급 예정일에 지정 계좌로 임대료를 입금하겠습니다. 발행 정보에 문의가 있으시면 아래 담당자에게 연락 부탁드립니다.</div>
+<div class="sub">■ 공급받는자 정보</div>
+<table>
+ <tr><td class="lbl" style="width:22%">상호</td><td>${H(RENT_COMPANY.name)}</td></tr>
+ <tr><td class="lbl">사업자등록번호</td><td>${H(RENT_COMPANY.bizNo)}</td></tr>
+ <tr><td class="lbl">대표자</td><td>${H(RENT_COMPANY.ceo)}</td></tr>
+ <tr><td class="lbl">사업장 주소</td><td>${H(RENT_COMPANY.addr)}</td></tr>
+ <tr><td class="lbl">업태</td><td>${H(RENT_COMPANY.bizType)}</td></tr>
+ <tr><td class="lbl">종목</td><td>${H(RENT_COMPANY.bizItem)}</td></tr>
+ <tr><td class="lbl">세금계산서 수신 이메일</td><td class="b">${H(RENT_COMPANY.taxEmail)}</td></tr>
+</table>
+<div class="sub">■ 발행 금액</div>
+<table>
+ <tr><th style="width:46%">품 목</th><th>공급가액</th><th>부가세</th><th>합 계</th></tr>
+ <tr><td>전기차 충전기 설치장소 임대료 (${H(period)}분)</td><td class="r">${won(c.supply)}</td><td class="r">${won(c.vat)}</td><td class="r b">${won(c.total)}</td></tr>
+</table>
+<div class="note">※ 품목명에 정산 대상 기간을 꼭 기재해 주세요.　문의 : ${H([sender.name,sender.phone,sender.email].filter(Boolean).join('  '))}</div>
+
+<div class="sign">
+ <div class="t">위와 같이 정산 내역을 통보합니다.</div>
+ <div class="d">${H(korDate(issue))}</div>
+ <div class="row"><span>발신 : ${H(RENT_COMPANY.name)}　대표이사 ${H(RENT_COMPANY.ceo)}　(인)</span><span>수신 확인 : ${H(name)} 입주자대표회의　(서명)</span></div>
+</div>
+</div></div>
+<script>
+// A4 한 장에 맞도록 내용이 길면 자동 축소
+function fitA4(){const p=document.querySelector('.paper'),i=document.querySelector('.inner');i.style.zoom=1;const cs=getComputedStyle(p);const h=i.scrollHeight;const max=p.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);const lim=max*275/188;if(h>lim){i.style.zoom=(lim/h).toFixed(3);}}
+window.addEventListener('load',fitA4);window.addEventListener('beforeprint',fitA4);
+<\/script>
+</body></html>`;
+}
+
+function copyGasCode() {
+  const code=`// 알뜰차저 관리 시스템 - Apps Script 백엔드 v8 (임대료 정산·발행대장 추가)
+const SS_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
+
+// 화면에서 쓰는 이름 → 구글 시트 탭 이름
+const SHEET_MAP = {complex:'단지', charger:'충전기', as:'AS', contract:'계약', sales:'매출실적', inbound:'입고', isensor:'아이센서재고', schedule:'일정', rent:'임대료조건', settle:'정산대장'};
+
+const HEADERS = {
+  '단지':   ['단지명','지역','시공일','설치대수','입대의연락처','영업담당자','상태','주소','시리얼번호','계약만료일','i-Sensor','계약일','시공업체','사업유형','비고','개통일'],
+  '충전기':  ['시리얼번호','단지명','상세위치','설치일','상태','거점','충전기번호','QR충전기번호'],
+  'AS':     ['접수번호','접수일','단지명','시리얼번호','증상','담당자','상태','처리이력','상세내용','접수경로'],
+  '계약':   ['단지명','계약일','만료일','월매출(만원)','담당자','상태','비고'],
+  '매출실적': ['단지명','연월','매출액(원)','충전량(kWh)','비고','등록일','프로모션'],
+  '입고':   ['입고일','수량','모델명','공급처','비고','등록일'],
+  '아이센서재고': ['구분','일자','수량','단지명','모델명/공급처','비고','등록일'],
+  '일정':   ['날짜','담당자','내용','비고','등록일'],
+  '임대료조건': ['단지명','단지코드','임대료율(%)','산정기준','월최소임대료','프로모션매출','정산주기','수신','담당자','전화','팩스','이메일','은행','계좌번호','예금주','계약번호','단지사업자번호','사용','비고','수정일'],
+  '정산대장': ['정산서번호','단지명','정산기간','충전금액','지급임대료','공급가액','부가세','발행일','지급예정일','발송일','발송방법','세금계산서수취일','지급일','비고','등록일']
+};
+
+function doGet(e) {
+  const action = e.parameter.action;
+  let result;
+  if(action === 'ping') result = {ok:true};
+  else if(action === 'getAll') result = getAllData();
+  else result = {error:'unknown action'};
+  return jsonResponse(result);
+}
+
+function doPost(e) {
+  try {
+    const d = JSON.parse(e.postData.contents);
+    if(d.action === 'addComplex')  { appendRow('단지', d.data);   return jsonResponse({ok:true}); }
+    if(d.action === 'addCharger')  { appendRow('충전기', d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'addAS')       { appendRow('AS', d.data);     return jsonResponse({ok:true}); }
+    if(d.action === 'addContract') { appendRow('계약', d.data);   return jsonResponse({ok:true}); }
+    if(d.action === 'addSales')    { appendRow('매출실적', d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'addInbound')  { appendRow('입고', d.data);   return jsonResponse({ok:true}); }
+    if(d.action === 'addIsensor')  { appendRow('아이센서재고', d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'addSchedule') { appendRow('일정', d.data);   return jsonResponse({ok:true}); }
+    if(d.action === 'addRentCond') { appendRow('임대료조건', d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'addSettle')   { appendRow('정산대장', d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'updateAS')    { updateAS(d.num, d.status, d.historyEntry); return jsonResponse({ok:true}); }
+    if(d.action === 'updateRow')   { updateRow(d.sheet, d.index, d.data); return jsonResponse({ok:true}); }
+    if(d.action === 'deleteRow')   { deleteRow(d.sheet, d.index); return jsonResponse({ok:true}); }
+    return jsonResponse({error:'unknown action'});
+  } catch(err) { return jsonResponse({error:err.toString()}); }
+}
+
+function getAllData() {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  ensureHeaders('매출실적'); // 기존 매출실적 탭에 '프로모션' 머리글(G열) 자동 추가
+  const sheetNames = ss.getSheets().map(s => s.getName());
+  return {
+    complexes: getSheet('단지').getDataRange().getValues().slice(1),
+    chargers:  getSheet('충전기').getDataRange().getValues().slice(1),
+    as:        getSheet('AS').getDataRange().getValues().slice(1),
+    contracts: getSheet('계약').getDataRange().getValues().slice(1),
+    sales:     getSheet('매출실적').getDataRange().getValues().slice(1),
+    inbound:   getSheet('입고').getDataRange().getValues().slice(1),
+    isensor:   getSheet('아이센서재고').getDataRange().getValues().slice(1),
+    schedules: getSheet('일정').getDataRange().getValues().slice(1),
+    rentConds: getSheet('임대료조건').getDataRange().getValues().slice(1),
+    settles:   getSheet('정산대장').getDataRange().getValues().slice(1),
+    _sheets:   sheetNames
+  };
+}
+
+function appendRow(sheetName, data) { getSheet(sheetName).appendRow(data); }
+
+function updateRow(sheetType, index, data) {
+  const sheet = getSheet(SHEET_MAP[sheetType] || sheetType);
+  sheet.getRange(index + 2, 1, 1, data.length).setValues([data]);
+}
+
+function deleteRow(sheetType, index) {
+  const sheet = getSheet(SHEET_MAP[sheetType] || sheetType);
+  sheet.deleteRow(index + 2);
+}
+
+function updateAS(num, status, historyEntry) {
+  const sheet = getSheet('AS');
+  const data = sheet.getDataRange().getValues();
+  for(let i=1;i<data.length;i++) {
+    if(data[i][0] === num) {
+      sheet.getRange(i+1,7).setValue(status);
+      const cur = data[i][7]||'';
+      sheet.getRange(i+1,8).setValue(cur ? cur+'|'+historyEntry : historyEntry);
+      break;
+    }
+  }
+}
+
+// 비어 있는 머리글 칸만 채움 (기존 머리글은 건드리지 않음)
+function ensureHeaders(name) {
+  const s = getSheet(name);
+  const h = HEADERS[name];
+  const cur = s.getRange(1, 1, 1, h.length).getValues()[0];
+  let changed = false;
+  h.forEach((v, i) => { if(cur[i] === '' || cur[i] === null) { cur[i] = v; changed = true; } });
+  if(changed) s.getRange(1, 1, 1, h.length).setValues([cur]).setFontWeight('bold').setBackground('#E1F5EE');
+}
+
+function getSheet(name) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  let s = ss.getSheetByName(name);
+  if(!s) {
+    s = ss.insertSheet(name);
+    s.appendRow(HEADERS[name]||[]);
+    s.getRange(1,1,1,s.getLastColumn()).setFontWeight('bold').setBackground('#E1F5EE');
+    // 계좌번호·전화 등이 숫자로 바뀌어 앞자리 0이 사라지지 않도록 텍스트 서식 지정
+    if(name === '임대료조건') s.getRange('A:T').setNumberFormat('@');
+  }
+  return s;
+}
+
+// CORS 포함 JSON 응답 (재배포 필수)
+function jsonResponse(data) {
+  const output = ContentService.createTextOutput(JSON.stringify(data));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}`;
+  navigator.clipboard.writeText(code).then(()=>showToast('✅ Apps Script 코드 복사됨! Google Apps Script에 붙여넣고 새 버전으로 재배포하세요'));
+}
+</script>
+
+<!-- ===================== 로그인 오버레이 ===================== -->
+<style>
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1B3A4B 0%, #0F6E56 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#login-overlay.hidden { display: none; }
+
+.login-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px 40px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.login-logo {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #1B3A4B, #2A8C6E);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+}
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1B3A4B;
+  margin-bottom: 6px;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+.login-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 32px;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+.login-input-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+.login-input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: 'Malgun Gothic', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 4px;
+  text-align: center;
+}
+.login-input:focus { border-color: #2A8C6E; }
+.login-input.error { border-color: #e53e3e; animation: shake 0.3s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-8px)}
+  75%{transform:translateX(8px)}
+}
+.login-error {
+  font-size: 13px;
+  color: #e53e3e;
+  margin-bottom: 12px;
+  min-height: 18px;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #2A8C6E, #3ab88f);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Malgun Gothic', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.login-btn:hover { opacity: 0.9; }
+.login-footer {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #bbb;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+</style>
+
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">⚡</div>
+    <div class="login-title">알뜰차저 관리 시스템</div>
+    <div class="login-subtitle">내부 직원 전용 · 비밀번호를 입력하세요</div>
+    <div class="login-input-wrap">
+      <input
+        type="password"
+        id="login-pw"
+        class="login-input"
+        placeholder="비밀번호"
+        maxlength="20"
+        onkeydown="if(event.key==='Enter')doLogin()"
+        autofocus
+      />
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-footer">주식회사 알뜰에너지솔루션</div>
+  </div>
+</div>
+
+<script>
+/* ===================== 로그인 인증 ===================== */
+// 비밀번호 변경 시 아래 한 줄만 수정하세요
+const PASSWORD = '0719';
+const SESSION_KEY = 'altteul_erp_auth';
+
+// 페이지 로드 시 이미 인증된 세션이면 바로 진입
+(function() {
+  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+    document.getElementById('login-overlay').classList.add('hidden');
+  }
+})();
+
+function doLogin() {
+  const input = document.getElementById('login-pw');
+  const errorEl = document.getElementById('login-error');
+
+  if (input.value === PASSWORD) {
+    // 인증 성공 → 세션 저장 후 오버레이 제거
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    document.getElementById('login-overlay').classList.add('hidden');
+    errorEl.textContent = '';
+  } else {
+    // 인증 실패 → 흔들림 효과 + 오류 메시지
+    input.classList.add('error');
+    errorEl.textContent = '비밀번호가 올바르지 않습니다.';
+    input.value = '';
+    setTimeout(() => input.classList.remove('error'), 400);
+    input.focus();
+  }
+}
+</script>
+</body>
+</html>
