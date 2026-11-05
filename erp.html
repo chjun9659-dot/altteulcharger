@@ -230,6 +230,8 @@ tbody tr.expanded td{background:#f7f7f5}
 /* 아이센서 입출고 구분 배지 */
 .isv-in{background:#E3F2FD;color:#1565C0;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
 .isv-out{background:#FFF3E0;color:#E65100;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500}
+/* 아이센서 단독 현장(충전기 단지 목록에 없는 현장) 표시 배지 */
+.isv-solo{background:#F3E5F5;color:#6A1B9A;font-size:10px;padding:1px 6px;border-radius:100px;font-weight:500;margin-left:4px}
 /* 확인 다이얼로그 */
 .confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center}
 .confirm-bg.open{display:flex}
@@ -787,7 +789,10 @@ tbody tr.expanded td{background:#f7f7f5}
         </div>
         <div class="form-group"><label>일자 *</label><input type="date" id="is-date"></div>
         <div class="form-group"><label>수량 (대) *</label><input type="number" id="is-qty" min="1" placeholder="10"></div>
-        <div class="form-group" id="is-complex-group" style="display:none"><label>단지명 *</label><select id="is-complex"><option value="">단지 선택...</option></select></div>
+        <div class="form-group" id="is-complex-group" style="display:none"><label>단지명/현장명 *</label><select id="is-complex" onchange="isComplexChanged()"><option value="">단지 선택...</option></select>
+          <!-- 아이센서만 단독 판매된 현장(단지 목록에 없는 곳)은 직접 입력 -->
+          <input type="text" id="is-complex-custom" placeholder="현장명 직접 입력 (예: ○○물류센터)" style="display:none;margin-top:6px">
+        </div>
         <div class="form-group" id="is-model-group"><label>모델명/공급처</label><input type="text" id="is-model" placeholder="예: iSensor-100 / 스타코프"></div>
         <div class="form-group full"><label>비고</label><input type="text" id="is-memo" placeholder="메모 (선택)"></div>
       </div>
@@ -1628,6 +1633,43 @@ function isTypeChanged() {
   document.getElementById('is-model-group').style.display = isOut ? 'none' : '';
 }
 
+// 아이센서 출고 단지 드롭다운 구성
+// - 등록 단지(충전기 단지 목록) / 아이센서 단독 현장(이전에 직접 입력했던 현장명) / ✏️ 직접 입력
+const IS_CUSTOM = '__custom__';
+function isBuildComplexOptions() {
+  const sel = document.getElementById('is-complex');
+  if (!sel) return;
+  const cur = sel.value;
+  const esc = t => String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const complexNames = (DB.complexes||[]).map(r => String(r[0]||'').trim()).filter(Boolean);
+  const cxSet = new Set(complexNames);
+  // 과거 출고 기록 중 단지 목록에 없는 현장명 = 아이센서 단독 현장 (재출고 시 다시 선택 가능)
+  const soloNames = [...new Set((DB.isensor||[]).filter(r => r[0]==='출고').map(r => String(r[3]||'').trim()).filter(n => n && !cxSet.has(n)))];
+  let html = '<option value="">단지 선택...</option>';
+  if (complexNames.length) html += '<optgroup label="충전기 등록 단지">' + complexNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('') + '</optgroup>';
+  if (soloNames.length) html += '<optgroup label="아이센서 단독 현장">' + soloNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('') + '</optgroup>';
+  html += `<option value="${IS_CUSTOM}">✏️ 직접 입력 (아이센서 단독 현장)</option>`;
+  sel.innerHTML = html;
+  if (cur) sel.value = cur;
+  isComplexChanged();
+}
+
+// '직접 입력' 선택 시 텍스트 입력란 표시
+function isComplexChanged() {
+  const sel = document.getElementById('is-complex');
+  const inp = document.getElementById('is-complex-custom');
+  if (!sel || !inp) return;
+  const custom = sel.value === IS_CUSTOM;
+  inp.style.display = custom ? '' : 'none';
+  if (custom) inp.focus();
+}
+
+// 현장명이 충전기 단지 목록에 없는지 (단독 현장 여부)
+function isSoloSite(name) {
+  if (!name) return false;
+  return !(DB.complexes||[]).some(r => String(r[0]||'').trim() === String(name).trim());
+}
+
 function renderIsensor() {
   const rows = DB.isensor || [];
   const inRows = rows.filter(r => r[0] === '입고');
@@ -1656,7 +1698,7 @@ function renderIsensor() {
   tbody.innerHTML = rows.length
     ? rows.map((r, i) => ({r, i})).reverse().map(({r, i}) => {
         const badge = r[0] === '출고' ? '<span class="isv-out">📤 출고</span>' : '<span class="isv-in">📥 입고</span>';
-        return `<tr><td>${badge}</td><td>${fmtDate(r[1])}</td><td><strong>${Number(r[2]||0)}대</strong></td><td>${r[3]||'-'}</td><td>${r[4]||'-'}</td><td>${r[5]||'-'}</td>
+        return `<tr><td>${badge}</td><td>${fmtDate(r[1])}</td><td><strong>${Number(r[2]||0)}대</strong></td><td>${r[3]||'-'}${(r[0]==='출고' && isSoloSite(r[3])) ? '<span class="isv-solo">단독</span>' : ''}</td><td>${r[4]||'-'}</td><td>${r[5]||'-'}</td>
       <td><button class="btn btn-danger" style="font-size:11px;padding:3px 8px" onclick="confirmDelete('isensor',${i},'${fmtDate(r[1])} ${r[0]} ${Number(r[2]||0)}대')">🗑</button></td></tr>`;
       }).join('')
     : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">입출고 내역이 없습니다 — 오른쪽 위 + 입출고 등록 버튼으로 추가하세요</td></tr>';
@@ -1668,11 +1710,13 @@ function submitIsensor() {
   const date = v('is-date'), qty = v('is-qty');
   if (!date || !qty) { showToast('일자와 수량은 필수입니다'); return; }
   if (Number(qty) <= 0) { showToast('수량은 1 이상 입력하세요'); return; }
-  const complex = v('is-complex');
-  if (isOut && !complex) { showToast('출고(설치) 시 단지명을 선택하세요'); return; }
+  // 직접 입력 선택 시 텍스트 입력값을 단지명/현장명으로 사용
+  const complex = v('is-complex') === IS_CUSTOM ? v('is-complex-custom') : v('is-complex');
+  if (isOut && !complex) { showToast('출고(설치) 시 단지명을 선택하거나 현장명을 직접 입력하세요'); return; }
   gasPost({action:'addIsensor', data:[type, date, Number(qty), complex, v('is-model'), v('is-memo'), new Date().toLocaleString('ko')]}, () => {
     closeModal('modal-isensor'); showToast('아이센서 ' + type + ' 등록 완료');
-    clearForm(['is-date','is-qty','is-complex','is-model','is-memo']);
+    clearForm(['is-date','is-qty','is-complex','is-complex-custom','is-model','is-memo']);
+    isComplexChanged();
     document.getElementById('is-type-in').checked = true;
     isTypeChanged();
   });
@@ -2232,7 +2276,7 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
   // 단지명 드롭다운 자동 채우기
   const complexNames=(DB.complexes||[]).map(r=>r[0]).filter(Boolean);
-  ['ch-complex','chb-complex','as-complex','sl-complex','is-complex','rc-complex'].forEach(selId=>{
+  ['ch-complex','chb-complex','as-complex','sl-complex','rc-complex'] /* is-complex는 isBuildComplexOptions()에서 별도 구성 */.forEach(selId=>{
     const sel=document.getElementById(selId);
     if(!sel) return;
     const cur=sel.value;
@@ -2253,6 +2297,7 @@ function openModal(id){
       const n=new Date();
       isDate.value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
     }
+    isBuildComplexOptions(); // 등록 단지 + 단독 현장 + 직접 입력
     isTypeChanged();
   }
   // 매출 입력 모달: 연도/월 자동 설정
