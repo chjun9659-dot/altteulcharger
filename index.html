@@ -513,6 +513,7 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
     <li><a href="#gallery" onclick="closeMenu()">시공 사례</a></li>
     <li><a href="#residents" onclick="closeMenu()">입주민 혜택</a></li>
     <li><a href="#press" onclick="closeMenu()">언론보도</a></li>
+    <li><a href="#blog" onclick="closeMenu()">블로그</a></li>
     <li class="nav-dropdown">
       <button class="nav-dropdown-toggle" onclick="toggleDropdown()" id="dropdownToggle">
         파트너사 모집
@@ -910,6 +911,45 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
     </div>
   </div>
 </section>
+
+<!-- BLOG: 네이버 블로그 최신 글 (files/blog.json 자동 업데이트) -->
+<section id="blog" style="background:#f5f7fa;padding:5rem 2rem">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-label fade-up">블로그</div>
+    <h2 class="section-title fade-up" style="margin-bottom:.5rem">알뜰차저 블로그 소식</h2>
+    <p class="section-body fade-up" style="margin-bottom:2.5rem">아파트 전기차 충전과 i-SENSOR 화재 예방 이야기를 블로그에서 전해드립니다.</p>
+    <div id="blogGrid" class="fade-up" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem"></div>
+    <div style="text-align:center;margin-top:2rem">
+      <a id="blogMoreBtn" href="https://blog.naver.com/chjun071900" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:white;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background .2s" onmouseover="this.style.background='var(--teal-light)'" onmouseout="this.style.background='var(--teal)'">블로그 전체 보기 →</a>
+    </div>
+  </div>
+</section>
+
+<script>
+// 블로그 카드 그리기: files/blog.json 을 읽어서 카드 생성
+(function(){
+  const grid=document.getElementById('blogGrid');
+  const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  // 썸네일이 없거나 깨질 때 보여줄 기본 그림
+  const ph='<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>';
+  function card(p){
+    const img=p.thumb?'<img src="'+esc(p.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML=window.__blogPh">':ph;
+    return '<a href="'+esc(p.link)+'" target="_blank" rel="noopener" style="display:flex;flex-direction:column;background:white;border:1px solid var(--gray200);border-radius:16px;overflow:hidden;text-decoration:none;box-shadow:0 2px 12px rgba(0,0,0,0.05);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,0.1)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 12px rgba(0,0,0,0.05)\'">'
+      +'<div style="height:170px;background:var(--gray100)">'+img+'</div>'
+      +'<div style="padding:1.25rem 1.5rem 1.5rem;display:flex;flex-direction:column;flex:1">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:.4rem">'+esc(p.category||'블로그')+(p.date?' <span style="color:var(--gray400);font-weight:400">· '+esc(p.date)+'</span>':'')+'</div>'
+      +'<div style="font-size:16px;font-weight:700;color:var(--navy);line-height:1.5;margin-bottom:.5rem">'+esc(p.title)+'</div>'
+      +'<div style="font-size:13px;color:var(--gray600);line-height:1.7;margin-bottom:1rem;flex:1">'+esc(p.summary)+'</div>'
+      +'<span style="font-size:13px;color:var(--teal);font-weight:600">블로그에서 보기 →</span></div></a>';
+  }
+  window.__blogPh=ph;
+  fetch('files/blog.json?v='+Date.now()).then(r=>r.json()).then(d=>{
+    if(d.blog) document.getElementById('blogMoreBtn').href=d.blog;
+    grid.innerHTML=(d.posts||[]).map(card).join('');
+    if(!d.posts||!d.posts.length) document.getElementById('blog').style.display='none';
+  }).catch(()=>{ document.getElementById('blog').style.display='none'; });
+})();
+</script>
 
 <!-- PARTNER -->
 <section id="partner">
