@@ -937,8 +937,8 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
     return '<a href="'+esc(p.link)+'" target="_blank" rel="noopener" style="display:flex;flex-direction:column;background:white;border:1px solid var(--gray200);border-radius:16px;overflow:hidden;text-decoration:none;box-shadow:0 2px 12px rgba(0,0,0,0.05);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,0.1)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 12px rgba(0,0,0,0.05)\'">'
       +'<div style="height:170px;background:var(--gray100)">'+img+'</div>'
       +'<div style="padding:1.25rem 1.5rem 1.5rem;display:flex;flex-direction:column;flex:1">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:.4rem">'+esc(p.category||'블로그')+(p.date?' <span style="color:var(--gray400);font-weight:400">· '+esc(p.date)+'</span>':'')+'</div>'
-      +'<div style="font-size:16px;font-weight:700;color:var(--navy);line-height:1.5;margin-bottom:.5rem">'+esc(p.title)+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:.4rem">'+esc(p.category&&p.category!=='게시판'?p.category:'알뜰차저 블로그')+(p.date?' <span style="color:var(--gray400);font-weight:400">· '+esc(p.date)+'</span>':'')+'</div>'
+      +'<div style="font-size:16px;font-weight:700;color:var(--navy);line-height:1.5;margin-bottom:.5rem">'+esc(String(p.title||'').replace(/\s+/g,' ').replace(/^아이센서\s*[_-]\s*/,'i-SENSOR 설치 · '))+'</div>'
       +'<div style="font-size:13px;color:var(--gray600);line-height:1.7;margin-bottom:1rem;flex:1">'+esc(p.summary)+'</div>'
       +'<span style="font-size:13px;color:var(--teal);font-weight:600">블로그에서 보기 →</span></div></a>';
   }
