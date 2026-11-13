@@ -154,6 +154,8 @@ section{padding:6rem 3rem}
 .about-stat{background:white;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid var(--gray200)}
 .about-stat-num{font-family:"DM Sans",sans-serif;font-size:2rem;font-weight:300;color:var(--teal);letter-spacing:-.04em}
 .about-stat-lbl{font-size:13px;color:var(--gray400);margin-top:4px;line-height:1.5}
+#about{padding-top:5rem;padding-bottom:4rem}
+.about-info{margin-top:1.2rem}
 .info-row{display:grid;grid-template-columns:90px 1fr;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--gray200)}
 .info-row:last-child{border:none}
 .info-key{font-size:14px;color:var(--gray400);font-weight:500}
@@ -413,6 +415,9 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
 
   /* ABOUT */
   .about-inner{grid-template-columns:1fr;gap:2rem}
+  .about-left{display:contents}
+  .about-right{order:2}
+  .about-info{order:3;margin-top:0}
   .about-float{display:none}
   .about-stats{grid-template-columns:repeat(3,1fr);gap:.6rem}
   .about-stat{padding:.9rem .5rem}
@@ -559,43 +564,42 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
   </div>
 </section>
 
-<!-- ABOUT (2026-11 회사소개서·지명원 기준으로 갱신) -->
+<!-- ABOUT (2026-11 회사소개서·지명원 기준으로 갱신, 한 화면에 들어오도록 회사정보는 왼쪽 카드 아래 배치) -->
 <section id="about">
   <div class="about-inner">
-    <div style="position:relative;padding-bottom:2.5rem;">
-      <div class="about-card">
-        <div class="about-card-title">알뜰에너지솔루션 소개</div>
-        <ul class="about-list">
-          <li><div class="chk">✓</div>2025년 3월 설립 · 대표이사 최준우</li>
-          <li><div class="chk">✓</div>전기신사업(전기자동차충전사업) 등록 제956호</li>
-          <li><div class="chk">✓</div>충전기 납품 · 시공 · 운영까지 직접 수행</li>
-          <li><div class="chk">✓</div>i-Sensor 화재 조기감지 특허 출원 기술</li>
-          <li><div class="chk">✓</div>전국 17개 영업 지사 네트워크 운영</li>
-          <li><div class="chk">✓</div>서울시 안전망홈 지원사업 사업자 선정</li>
-        </ul>
+    <div class="about-left">
+      <div style="position:relative;padding-bottom:2.5rem;">
+        <div class="about-card">
+          <div class="about-card-title">알뜰에너지솔루션 소개</div>
+          <ul class="about-list">
+            <li><div class="chk">✓</div>2025년 3월 설립 · 대표이사 최준우</li>
+            <li><div class="chk">✓</div>전기신사업(전기자동차충전사업) 등록 제956호</li>
+            <li><div class="chk">✓</div>충전기 납품 · 시공 · 운영까지 직접 수행</li>
+            <li><div class="chk">✓</div>i-Sensor 화재 조기감지 특허 출원 기술</li>
+            <li><div class="chk">✓</div>전국 17개 영업 지사 네트워크 운영</li>
+            <li><div class="chk">✓</div>서울시 안전망홈 지원사업 사업자 선정</li>
+          </ul>
+        </div>
+        <div class="about-float"><div class="about-float-num">120개소</div><div class="about-float-lbl">i-Sensor 설치 (관계사 포함)</div></div>
       </div>
-      <div class="about-float"><div class="about-float-num">91개소</div><div class="about-float-lbl">i-Sensor 설치 (관계사 포함)</div></div>
+      <!-- 회사 기본 정보 -->
+      <div class="about-info">
+        <div class="info-row"><span class="info-key">회사명</span><span class="info-val">주식회사 알뜰에너지솔루션 (알뜰차저)</span></div>
+        <div class="info-row"><span class="info-key">주요 등록</span><span class="info-val">전기신사업 등록 제956호 (2026. 7. 15.)</span></div>
+        <div class="info-row"><span class="info-key">본사</span><span class="info-val">경기도 남양주시 다산지금로 202, A동 10층 (현대테라타워)</span></div>
+        <div class="info-row"><span class="info-key">연락처</span><span class="info-val">대표전화 1577-8612 · 팩스 02-6008-0520</span></div>
+      </div>
     </div>
-    <div>
+    <div class="about-right">
       <div class="section-label">회사 소개</div>
       <h2 class="section-title">충전과 화재예방,<br>하나로 해결합니다</h2>
       <p class="section-body">주식회사 알뜰에너지솔루션은 전기차 충전장치와 충전 플랫폼 서비스를 전문으로 하는 기업입니다. 충전기 납품 · 시공부터 화재 조기감지 시스템(i-Sensor) 구축, 24시간 관제와 유지보수까지 직접 수행하는 원스톱 체계로, 입주민이 안심하고 사용할 수 있는 충전 환경을 만들어 갑니다.</p>
       <div class="about-stats">
-        <div class="about-stat"><div class="about-stat-num">35</div><div class="about-stat-lbl">운영계약 충전기(대)<br>계약 10곳</div></div>
+        <div class="about-stat"><div class="about-stat-num">52</div><div class="about-stat-lbl">운영계약 충전기(대)<br>16개 단지</div></div>
         <div class="about-stat"><div class="about-stat-num">78</div><div class="about-stat-lbl">충전설비 구축(건)</div></div>
-        <div class="about-stat"><div class="about-stat-num">91</div><div class="about-stat-lbl">i-Sensor 설치(개소)</div></div>
+        <div class="about-stat"><div class="about-stat-num">120</div><div class="about-stat-lbl">i-Sensor 설치(개소)</div></div>
       </div>
       <div style="font-size:12px;color:var(--gray400);margin-top:.6rem;text-align:right">※ 충전설비 구축 · i-Sensor 설치 실적은 관계사 포함</div>
-      <div style="margin-top:1.6rem;">
-        <div class="info-row"><span class="info-key">회사명</span><span class="info-val">주식회사 알뜰에너지솔루션 (브랜드: 알뜰차저)</span></div>
-        <div class="info-row"><span class="info-key">설립</span><span class="info-val">2025년 3월 25일</span></div>
-        <div class="info-row"><span class="info-key">주요 등록</span><span class="info-val">전기신사업 등록 제956호 (2026. 7. 15.)</span></div>
-        <div class="info-row"><span class="info-key">주요 사업</span><span class="info-val">충전기 납품 · 시공 · 운영, i-Sensor 화재 조기감지, 충전 플랫폼 · 관제</span></div>
-        <div class="info-row"><span class="info-key">전국 네트워크</span><span class="info-val">17개 영업 지사</span></div>
-        <div class="info-row"><span class="info-key">본사</span><span class="info-val">경기도 남양주시 다산지금로 202, A동 10층 (현대테라타워)</span></div>
-        <div class="info-row"><span class="info-key">대표전화</span><span class="info-val">1577-8612</span></div>
-        <div class="info-row"><span class="info-key">팩스</span><span class="info-val">02-6008-0520</span></div>
-      </div>
     </div>
   </div>
 </section>
@@ -784,7 +788,7 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
       </div>
       <div class="invest-stat-divider"></div>
       <div class="invest-stat-item">
-        <div class="invest-stat-num">15<span>개</span></div>
+        <div class="invest-stat-num">17<span>개</span></div>
         <div class="invest-stat-lbl">전국 지사 네트워크</div>
       </div>
       <div class="invest-stat-divider"></div>
