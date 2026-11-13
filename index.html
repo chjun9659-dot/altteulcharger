@@ -154,7 +154,9 @@ section{padding:6rem 3rem}
 .about-stat{background:white;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid var(--gray200)}
 .about-stat-num{font-family:"DM Sans",sans-serif;font-size:2rem;font-weight:300;color:var(--teal);letter-spacing:-.04em}
 .about-stat-lbl{font-size:13px;color:var(--gray400);margin-top:4px;line-height:1.5}
-#about{padding-top:5rem;padding-bottom:4rem}
+/* 회사소개: 상단 메뉴 클릭 시 화면 전체를 채우도록 (상단 메뉴 높이만큼 위 여백 확보, 내용은 세로 가운데 정렬) */
+#about{min-height:100vh;display:flex;align-items:center;padding-top:calc(64px + 2rem);padding-bottom:2rem;box-sizing:border-box}
+#about .about-inner{width:100%}
 .about-info{margin-top:1.2rem}
 .info-row{display:grid;grid-template-columns:90px 1fr;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--gray200)}
 .info-row:last-child{border:none}
