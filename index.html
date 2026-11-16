@@ -235,7 +235,12 @@ section{padding:6rem 3rem}
 .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
 .service-card{border:1px solid var(--gray200);border-radius:16px;overflow:hidden;background:white;transition:all .25s}
 .service-card:hover{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 12px 40px rgba(42,140,110,0.1)}
-.svc-img{height:160px;background:var(--navy);display:flex;align-items:center;justify-content:center}
+/* 서비스 카드 상단 사진: 실제 시공 사진 위에 네이비 반투명 그라데이션을 덮어 아이콘이 잘 보이게 함 */
+.svc-img{height:200px;background-color:var(--navy);background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:flex-start;padding:1rem 1.25rem;position:relative;overflow:hidden}
+.svc-img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(26,46,59,0) 35%,rgba(26,46,59,0.8) 100%);transition:opacity .4s}
+.svc-img .svc-icon{position:relative;z-index:1;width:52px;height:52px;background:rgba(26,46,59,0.6);border-color:rgba(79,200,154,0.7);backdrop-filter:blur(4px)}
+.svc-img .svc-icon svg{width:24px;height:24px}
+.service-card:hover .svc-img::before{opacity:.7}
 .svc-icon{width:68px;height:68px;border-radius:50%;background:rgba(79,200,154,0.15);border:1px solid rgba(79,200,154,0.3);display:flex;align-items:center;justify-content:center}
 .svc-icon svg{width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:1.5}
 .svc-body{padding:1.5rem}
@@ -696,15 +701,15 @@ footer{background:var(--navy-dark);padding:3rem;border-top:1px solid rgba(255,25
     <h2 class="section-title fade-up">충전기 설치부터 운영까지<br>원스톱 솔루션</h2>
     <div class="services-grid">
       <div class="service-card fade-up">
-        <div class="svc-img"><div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div></div>
+        <div class="svc-img" style="background-image:url('https://res.cloudinary.com/dvz6yrg04/image/upload/w_700,h_380,c_fill,g_auto,q_auto,f_auto/%EC%8B%A0%EB%82%B4skv1_01_hdc5yv')"><div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div></div>
         <div class="svc-body"><div class="svc-title">충전기 설치</div><div class="svc-desc">공동주택 환경에 최적화된 7kW 완속충전기를 설치합니다. 신규부터 기존 교체까지 모든 유형을 지원합니다.</div><ul class="svc-list"><li>신규 설치</li><li>기존 충전기 교체</li><li>추가 설치</li></ul></div>
       </div>
       <div class="service-card fade-up">
-        <div class="svc-img"><div class="svc-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg></div></div>
+        <div class="svc-img" style="background-image:url('https://res.cloudinary.com/dvz6yrg04/image/upload/w_700,h_380,c_fill,g_auto,q_auto,f_auto/%EB%85%BC%ED%98%84%EC%9A%B0%EB%AF%BC%EC%95%84%ED%8C%8C%ED%8A%B8_01_i7lgnp')"><div class="svc-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg></div></div>
         <div class="svc-body"><div class="svc-title">운영 서비스</div><div class="svc-desc">24시간 원격 관제 시스템으로 안정적인 충전 서비스를 보장합니다. 장애 발생 시 신속하게 대응합니다.</div><ul class="svc-list"><li>24시간 관제</li><li>장애 접수 및 처리</li><li>원격 모니터링</li></ul></div>
       </div>
       <div class="service-card fade-up">
-        <div class="svc-img"><div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
+        <div class="svc-img" style="background-image:url('https://res.cloudinary.com/dvz6yrg04/image/upload/w_700,h_380,c_fill,g_auto,q_auto,f_auto/%EC%8B%A0%EB%82%B4skv1_02_u5yhwp')"><div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
         <div class="svc-body"><div class="svc-title">입주민 혜택</div><div class="svc-desc">환경부 기준 90% 수준의 요금과 i-sensor 무료 설치로 안전하고 경제적인 충전 환경을 제공합니다.</div><ul class="svc-list"><li>환경부 기준 90% 요금</li><li>i-sensor 무료 설치</li><li>편리한 충전 환경</li></ul></div>
       </div>
     </div>
