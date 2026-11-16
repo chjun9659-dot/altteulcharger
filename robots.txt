@@ -1,0 +1,7 @@
+# 알뜰차저 검색엔진 수집 규칙
+User-agent: *
+Allow: /
+# 내부 ERP 페이지는 검색 노출 제외
+Disallow: /erp.html
+
+Sitemap: https://altteulcharger.co.kr/sitemap.xml
