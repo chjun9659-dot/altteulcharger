@@ -2,7 +2,15 @@
   "blog": "https://blog.naver.com/chjun071900",
   "posts": [
     {
-      "title": "아파트 전기차 충전기 설치,                                        입주자대표회의 의결부터 개통까지 정리",
+      "title": "지하주차장 전기차 화재,                                               정말 위험할까?",
+      "link": "https://blog.naver.com/chjun071900/224480137570",
+      "date": "2026.11.17",
+      "category": "게시판",
+      "summary": "안녕하세요, 아파트 전기차 충전 전문 알뜰차저입니다. 지난 글에서 아파트 충전기 설치 순서를 정리해 드렸는데요. 오늘은 입주민분들이 가장 많이 걱정하시는 이야기를…",
+      "thumb": "https://blogthumb.pstatic.net/MjAyNjExMTdfMjY0/MDAxNzk0ODc0ODQyMTI2.SnAn3861NnvyciiWw-HPa3lOmQiHKqgSMqAvLwiwl3og.QOb4nh5wC-z5tFgqEtFowD2m-7cOdUQtb0Cilb-GydEg.PNG/%3F%95%8C%3F%9C%B0%EC%B0%A8%EC%3F_%EB%B8%94%EB%A1%9C%EA%B7%3F_%EC%BB%A4%EB%B2%84.png?type=s3"
+    },
+    {
+      "title": "아파트 충전기 설치, 입대의 의결부터 개통까지",
       "link": "https://blog.naver.com/chjun071900/224478819662",
       "date": "2026.11.16",
       "category": "게시판",
@@ -40,14 +48,6 @@
       "category": "게시판",
       "summary": "이제는 아이센서(화재 조기 감지 시스템) 설치 단지가 엄청 많이 늘어난것 같네요. 지금 지자체에서 보조금까지 지원을 한다고 하니 더 많은 단지들이 설치를 하는것 …",
       "thumb": "https://blogthumb.pstatic.net/MjAyNjA1MjJfMTYw/MDAxNzc5NDM1OTE3ODc1.HxTHasXAgffVPvUY9g3NUHnznhBZpLatKz5uCB9q7ccg.J35wr7cNvkQj8XnF29n05wCd9QiyXlCI5qYDNHxkz10g.PNG/image.png?type=s3"
-    },
-    {
-      "title": "아이센서-서초자이르네",
-      "link": "https://blog.naver.com/chjun071900/224073858823",
-      "date": "2025.11.12",
-      "category": "게시판",
-      "summary": "아이센서가 서초동 진출했네요... 화재가 자주 발생하는 요즘 많이 보급이 되길 바랍니다. 화재는 예방이 우선인듯 하네요... 아이센서는 예방에 목적을두고 설계된 …",
-      "thumb": "https://blogthumb.pstatic.net/MjAyNTExMTJfNzQg/MDAxNzYyOTQyOTc3MzYx.e0N8wR2T2aepw4W0vDI2QI40OP0QwpnBhnhSDWIvoYEg.T2XwT8XgOhwoM0GxK9Z8vZIrPE6Jv7g2fyt_Y_yqje0g.PNG/image.png?type=s3"
     }
   ]
 }
