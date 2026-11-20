@@ -2,6 +2,14 @@
   "blog": "https://blog.naver.com/chjun071900",
   "posts": [
     {
+      "title": "i-SENSOR, 전기차 화재를 미리 아는 원리",
+      "link": "https://blog.naver.com/chjun071900/224483433551",
+      "date": "2026.11.20",
+      "category": "게시판",
+      "summary": "안녕하세요, 전기차 충전 전문 알뜰차저입니다. 지난번 지하주차장 화재 글에서 **”불이 나기 전에 아는 것\"**이 가장 중요하다고 말씀드렸는데요. 그 글을 보시고…",
+      "thumb": "https://blogthumb.pstatic.net/MjAyNjExMTlfMjgw/MDAxNzk1MDY2MTExMDcz.anlka-p5E275YaLQPPOWmr8lxCPBiu8IVueJWu0GWd4g.JpNn1idSs2YqtMdCpzMFKTGxRkOfHK3YNRwQJK6cC1Ig.PNG/%3F%95%8C%3F%9C%B0%EC%B0%A8%EC%3F_%EB%B8%94%EB%A1%9C%EA%B7%3F_%EC%BB%A4%EB%B2%84.png?type=s3"
+    },
+    {
       "title": "단독주택 충전기 설치, 비용과 순서 총정리",
       "link": "https://blog.naver.com/chjun071900/224481592862",
       "date": "2026.11.18",
@@ -40,14 +48,6 @@
       "category": "게시판",
       "summary": "전기차를 가지고 있으면 죄인인가? 지하주차장에 전기차가 내려가면 이런 기분이 들었죠?ㅎ 그럼 지상 1층에 거주하시는 입주민 기분은 생각해보셨나요? 암튼 공동주택이…",
       "thumb": "https://blogthumb.pstatic.net/MjAyNjA1MjJfOTIg/MDAxNzc5NDM2ODQ3NDM3.idA8nEM5WK4AoJUrzcTyPXPXYPgyOgck5DYm1qkBAO4g.DSmazqKGiPpUgYFyoLn7LzvgBkYsW62nwAuqAABPGX4g.PNG/image.png?type=s3"
-    },
-    {
-      "title": "아이센서_원주이지더원1차",
-      "link": "https://blog.naver.com/chjun071900/224293621903",
-      "date": "2026.05.22",
-      "category": "게시판",
-      "summary": "원주이지더원1차에도 아이센서가 시공이 되었습니다. 강원도에서 유독 설치를 하는 단지가 많은것 같습니다. 깔끔하게 설치가 되었네요 전기차 화재로부터 조금이나마 안전…",
-      "thumb": "https://blogthumb.pstatic.net/MjAyNjA1MjJfMjEz/MDAxNzc5NDM2MzgyOTg0.r-LZA-kiX1KQsgQ-Rl8dh96VsHDe42TIKDtB2-hUh9kg.XlYKG4pVffifdOGYftq2iWev0DYLcVvBX07KXcXhVWMg.PNG/image.png?type=s3"
     }
   ]
 }
